@@ -3,3 +3,5 @@ TLA/test/
 TLA/SplitLess_test/
 TLA/*.txt
 /Project_ideas.pdf
+TLA/SplitLess/*.toolbox/
+*.DS_Store
