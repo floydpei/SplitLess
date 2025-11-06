@@ -2,7 +2,7 @@
 TLC2 Version 2.16 of 31 December 2020 (rev: cdddf55)
 @!@!@ENDMSG 2262 @!@!@
 @!@!@STARTMSG 2187:0 @!@!@
-Running breadth-first search Model-Checking with fp 39 and seed 4303270673528196212 with 8 workers on 8 cores with 3547MB heap and 7973MB offheap memory [pid: 14089] (Linux 6.14.0-33-generic amd64, AdoptOpenJDK 14.0.1 x86_64, OffHeapDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 76 and seed -8863354418343764025 with 8 workers on 8 cores with 3547MB heap and 7973MB offheap memory [pid: 13680] (Linux 6.14.0-33-generic amd64, AdoptOpenJDK 14.0.1 x86_64, OffHeapDiskFPSet, DiskStateQueue).
 @!@!@ENDMSG 2187 @!@!@
 @!@!@STARTMSG 2220:0 @!@!@
 Starting SANY...
@@ -23,26 +23,47 @@ Semantic processing of module MC
 SANY finished.
 @!@!@ENDMSG 2219 @!@!@
 @!@!@STARTMSG 2185:0 @!@!@
-Starting... (2025-11-06 14:30:13)
+Starting... (2025-11-06 14:27:37)
 @!@!@ENDMSG 2185 @!@!@
+@!@!@STARTMSG 2284:3 @!@!@
+Declaring state or action constraints during liveness checking is dangerous: Please read section 14.3.5 on page 247 of Specifying Systems (https://lamport.azurewebsites.net/tla/book.html) and optionally the discussion at https://discuss.tlapl.us/msg00994.html for more details.
+@!@!@ENDMSG 2284 @!@!@
+@!@!@STARTMSG 2212:0 @!@!@
+Implied-temporal checking--satisfiability problem has 1 branches.
+@!@!@ENDMSG 2212 @!@!@
 @!@!@STARTMSG 2189:0 @!@!@
 Computing initial states...
 @!@!@ENDMSG 2189 @!@!@
 @!@!@STARTMSG 2190:0 @!@!@
-Finished computing initial states: 1 distinct state generated at 2025-11-06 14:30:15.
+Finished computing initial states: 1 distinct state generated at 2025-11-06 14:27:38.
 @!@!@ENDMSG 2190 @!@!@
+@!@!@STARTMSG 2192:0 @!@!@
+Checking temporal properties for the current state space with 1453 total distinct states at (2025-11-06 14:27:41)
+@!@!@ENDMSG 2192 @!@!@
+@!@!@STARTMSG 2267:0 @!@!@
+Finished checking temporal properties in 00s at 2025-11-06 14:27:41
+@!@!@ENDMSG 2267 @!@!@
 @!@!@STARTMSG 2200:0 @!@!@
-Progress(7) at 2025-11-06 14:30:18: 79,959 states generated (79,959 s/min), 15,412 distinct states found (15,412 ds/min), 10,277 states left on queue.
+Progress(6) at 2025-11-06 14:27:41: 23,118 states generated (23,118 s/min), 5,689 distinct states found (5,689 ds/min), 4,233 states left on queue.
 @!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(7) at 2025-11-06 14:27:49: 368,386 states generated, 24,651 distinct states found, 0 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2192:0 @!@!@
+Checking temporal properties for the complete state space with 24651 total distinct states at (2025-11-06 14:27:49)
+@!@!@ENDMSG 2192 @!@!@
+@!@!@STARTMSG 2267:0 @!@!@
+Finished checking temporal properties in 00s at 2025-11-06 14:27:50
+@!@!@ENDMSG 2267 @!@!@
 @!@!@STARTMSG 2193:0 @!@!@
 Model checking completed. No error has been found.
   Estimates of the probability that TLC did not check all reachable states
   because two distinct states had the same fingerprint:
   calculated (optimistic):  val = 4.6E-10
-  based on the actual fingerprints:  val = 1.2E-11
+  based on the actual fingerprints:  val = 3.7E-11
 @!@!@ENDMSG 2193 @!@!@
 @!@!@STARTMSG 2201:0 @!@!@
-The coverage statistics at 2025-11-06 14:30:29
+The coverage statistics at 2025-11-06 14:27:58
 @!@!@ENDMSG 2201 @!@!@
 @!@!@STARTMSG 2773:0 @!@!@
 <Init line 44, col 1 to line 44, col 4 of module SplitLess_replica_group_expenses>: 1:1
@@ -51,7 +72,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 45, col 8 to line 52, col 27 of module SplitLess_replica_group_expenses: 1
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<CreateGroup line 119, col 1 to line 119, col 11 of module SplitLess_replica_group_expenses (123 9 134 51)>: 1367:56640
+<CreateGroup line 119, col 1 to line 119, col 11 of module SplitLess_replica_group_expenses (123 9 134 51)>: 1459:56640
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 123, col 12 to line 123, col 40 of module SplitLess_replica_group_expenses: 253848
@@ -78,7 +99,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 133, col 15 to line 134, col 51 of module SplitLess_replica_group_expenses: 56640
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<AddMember line 136, col 1 to line 136, col 9 of module SplitLess_replica_group_expenses (140 9 148 51)>: 412:17264
+<AddMember line 136, col 1 to line 136, col 9 of module SplitLess_replica_group_expenses (140 9 148 51)>: 423:17264
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 140, col 12 to line 140, col 40 of module SplitLess_replica_group_expenses: 411680
@@ -117,7 +138,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 147, col 15 to line 148, col 51 of module SplitLess_replica_group_expenses: 17264
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<LeaveGroup line 150, col 1 to line 150, col 10 of module SplitLess_replica_group_expenses (154 9 165 51)>: 418:19292
+<LeaveGroup line 150, col 1 to line 150, col 10 of module SplitLess_replica_group_expenses (154 9 165 51)>: 431:19292
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 154, col 12 to line 154, col 40 of module SplitLess_replica_group_expenses: 216500
@@ -273,7 +294,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 165, col 18 to line 165, col 51 of module SplitLess_replica_group_expenses: 19292
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<CreateExpense line 172, col 1 to line 172, col 13 of module SplitLess_replica_group_expenses (177 9 193 43)>: 4199:13980
+<CreateExpense line 172, col 1 to line 172, col 13 of module SplitLess_replica_group_expenses (177 9 193 43)>: 4280:13980
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 177, col 12 to line 177, col 40 of module SplitLess_replica_group_expenses: 802812
@@ -387,7 +408,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 193, col 18 to line 193, col 43 of module SplitLess_replica_group_expenses: 13980
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<AddExpenseToGroup line 195, col 1 to line 195, col 17 of module SplitLess_replica_group_expenses (200 9 215 51)>: 347:7232
+<AddExpenseToGroup line 195, col 1 to line 195, col 17 of module SplitLess_replica_group_expenses (200 9 215 51)>: 338:7232
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 200, col 12 to line 200, col 40 of module SplitLess_replica_group_expenses: 401648
@@ -528,7 +549,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 233, col 15 to line 234, col 47 of module SplitLess_replica_group_expenses: 520
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<ModifyExpenseParameters line 236, col 1 to line 236, col 23 of module SplitLess_replica_group_expenses (241 9 262 51)>: 6650:139876
+<ModifyExpenseParameters line 236, col 1 to line 236, col 23 of module SplitLess_replica_group_expenses (241 9 262 51)>: 6637:139876
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 241, col 12 to line 241, col 40 of module SplitLess_replica_group_expenses: 928708
@@ -723,7 +744,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 262, col 18 to line 262, col 51 of module SplitLess_replica_group_expenses: 139876
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<DeleteExpense line 264, col 1 to line 264, col 13 of module SplitLess_replica_group_expenses (268 9 283 51)>: 3611:39628
+<DeleteExpense line 264, col 1 to line 264, col 13 of module SplitLess_replica_group_expenses (268 9 283 51)>: 3650:39628
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 268, col 12 to line 268, col 40 of module SplitLess_replica_group_expenses: 236836
@@ -819,7 +840,7 @@ The coverage statistics at 2025-11-06 14:30:29
   line 283, col 18 to line 283, col 51 of module SplitLess_replica_group_expenses: 39628
 @!@!@ENDMSG 2221 @!@!@
 @!@!@STARTMSG 2772:0 @!@!@
-<MergeReplicas line 328, col 1 to line 328, col 13 of module SplitLess_replica_group_expenses (330 5 349 35)>: 7646:49302
+<MergeReplicas line 328, col 1 to line 328, col 13 of module SplitLess_replica_group_expenses (330 5 349 35)>: 7432:49302
 @!@!@ENDMSG 2772 @!@!@
 @!@!@STARTMSG 2221:0 @!@!@
   line 330, col 8 to line 330, col 24 of module SplitLess_replica_group_expenses: 147906
@@ -990,7 +1011,7 @@ The coverage statistics at 2025-11-06 14:30:29
 End of statistics.
 @!@!@ENDMSG 2202 @!@!@
 @!@!@STARTMSG 2200:0 @!@!@
-Progress(7) at 2025-11-06 14:30:29: 368,386 states generated (1,319,434 s/min), 24,651 distinct states found (88,291 ds/min), 0 states left on queue.
+Progress(7) at 2025-11-06 14:27:58: 368,386 states generated (1,020,884 s/min), 24,651 distinct states found (68,313 ds/min), 0 states left on queue.
 @!@!@ENDMSG 2200 @!@!@
 @!@!@STARTMSG 2199:0 @!@!@
 368386 states generated, 24651 distinct states found, 0 states left on queue.
@@ -1002,5 +1023,5 @@ The depth of the complete state graph search is 7.
 The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 17 and the 95th percentile is 6).
 @!@!@ENDMSG 2268 @!@!@
 @!@!@STARTMSG 2186:0 @!@!@
-Finished in 16760ms at (2025-11-06 14:30:29)
+Finished in 21657ms at (2025-11-06 14:27:58)
 @!@!@ENDMSG 2186 @!@!@

@@ -410,13 +410,6 @@ Inv_GroupBalanceZero ==
               SumFunction([ u \in allUsers |-> Balance(u, gid, replicas[rid]) ])
         IN total + replicas[rid].groups[gid].totalGifted = 0
         
-Inv_ExpenseOnlyInOneGroup ==
-    \A rid \in POSSIBLE_REPLICA_IDs :
-        \A eid \in POSSIBLE_EXPENSE_IDs :
-            replicas[rid].recordedExpenses[eid] # NO_EXPENSE =>
-            LET allCounters ==
-              {replicas[rid].recordedExpenses[eid].groupCounter[gid] : gid \in DOMAIN replicas[rid].recordedExpenses[eid].groupCounter}
-            IN Cardinality( {evenCounters \in allCounters: evenCounters % 2 = 1} ) <= 1
 
 
 Inv ==
@@ -441,7 +434,7 @@ MaxExpenseVersion(eid) ==
     IN IF versions = {} THEN 0
        ELSE CHOOSE v \in versions : \A w \in versions : v >= w
      
-AllReplicasCaughtUp(eid) ==
+AllReplicasCaughtUpExpenseVersion(eid) ==
     LET v == MaxExpenseVersion(eid)
     IN \A r \in POSSIBLE_REPLICA_IDs :
          replicas[r].recordedExpenses[eid] # NO_EXPENSE =>
@@ -463,7 +456,6 @@ AllReplicasCaughtUpMember(gid, u) ==
          replicas[r].groups[gid] # NO_GROUP =>
            replicas[r].groups[gid].members[u] >= maxC
 
-\* dont do expense to group assignment in version of expense as the version already holds info on modification of expense parameters (like shares)
 AllReplicasAgreeOnExpenseGroup(eid) ==
     \A r1, r2 \in POSSIBLE_REPLICA_IDs :
         /\ replicas[r1].recordedExpenses[eid] # NO_EXPENSE
@@ -476,7 +468,7 @@ AllReplicasAgreeOnExpenseGroup(eid) ==
 \* ----------------------------
 
 Liveness_ExpenseVersionPropagates ==
-    \A eid \in POSSIBLE_EXPENSE_IDs : []<>(AllReplicasCaughtUp(eid))
+    \A eid \in POSSIBLE_EXPENSE_IDs : []<>(AllReplicasCaughtUpExpenseVersion(eid))
 
 Liveness_GroupMembershipPropagates ==
     \A gid \in POSSIBLE_GROUP_IDs :
@@ -492,5 +484,5 @@ Liveness == /\ Liveness_ExpenseVersionPropagates
 
 =============================================================================
 \* Modification History
-\* Last modified Tue Nov 04 14:19:04 CET 2025 by floyd
+\* Last modified Thu Nov 06 14:29:30 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd

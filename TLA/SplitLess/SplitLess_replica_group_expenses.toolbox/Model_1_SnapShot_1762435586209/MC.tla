@@ -22,39 +22,39 @@ a, b
 ----
 
 \* MV CONSTANT definitions POSSIBLE_EXPENSE_IDs
-const_176243581304024000 == 
+const_176243554115863000 == 
 {eid1, eid2}
 ----
 
 \* MV CONSTANT definitions POSSIBLE_GROUP_IDs
-const_176243581304025000 == 
+const_176243554115864000 == 
 {gid1, gid2}
 ----
 
 \* MV CONSTANT definitions POSSIBLE_REPLICA_IDs
-const_176243581304026000 == 
+const_176243554115865000 == 
 {r1, r2}
 ----
 
 \* MV CONSTANT definitions USERS
-const_176243581304027000 == 
+const_176243554115866000 == 
 {a, b}
 ----
 
 \* CONSTANT definitions @modelParameterConstants:2POSSIBLE_SHARES
-const_176243581304028000 == 
+const_176243554115867000 == 
 [USERS -> 0..1]
 ----
 
 \* CONSTANT definitions @modelParameterConstants:7ASSIGNED_REPLICA
-const_176243581304029000 == 
+const_176243554115868000 == 
 [ u \in USERS |-> IF u = a THEN r1 ELSE r2]
 ----
 
 \* CONSTRAINT definition @modelParameterContraint:0
-constr_176243581304030000 ==
-actionCounter <= 2
+constr_176243554115869000 ==
+actionCounter <= 3
 ----
 =============================================================================
 \* Modification History
-\* Created Thu Nov 06 14:30:13 CET 2025 by floyd
+\* Created Thu Nov 06 14:25:41 CET 2025 by floyd

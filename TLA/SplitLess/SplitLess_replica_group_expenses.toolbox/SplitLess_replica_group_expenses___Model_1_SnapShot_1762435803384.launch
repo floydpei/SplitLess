@@ -2,7 +2,7 @@
 <launchConfiguration type="org.lamport.tla.toolbox.tool.tlc.modelCheck">
     <stringAttribute key="TLCCmdLineParameters" value=""/>
     <intAttribute key="collectCoverage" value="1"/>
-    <stringAttribute key="configurationName" value="Model_1"/>
+    <stringAttribute key="configurationName" value="Model_1_SnapShot_1762435803384"/>
     <booleanAttribute key="deferLiveness" value="false"/>
     <intAttribute key="dfidDepth" value="100"/>
     <booleanAttribute key="dfidMode" value="false"/>
@@ -12,7 +12,7 @@
     <stringAttribute key="distributedTLC" value="off"/>
     <stringAttribute key="distributedTLCVMArgs" value=""/>
     <intAttribute key="fpBits" value="1"/>
-    <intAttribute key="fpIndex" value="112"/>
+    <intAttribute key="fpIndex" value="76"/>
     <booleanAttribute key="fpIndexRandom" value="true"/>
     <intAttribute key="maxHeapSize" value="75"/>
     <intAttribute key="maxSetSize" value="1000000"/>
@@ -48,7 +48,7 @@
         <listEntry value="NO_GROUP;;NO_GROUP;1;0"/>
         <listEntry value="ASSIGNED_REPLICA;;[ u \in USERS |-&gt; IF u = a THEN r1 ELSE r2];0;0"/>
     </listAttribute>
-    <stringAttribute key="modelParameterContraint" value="actionCounter &lt;= 2"/>
+    <stringAttribute key="modelParameterContraint" value="actionCounter &lt;= 7"/>
     <listAttribute key="modelParameterDefinitions"/>
     <stringAttribute key="modelParameterModelValues" value="{}"/>
     <stringAttribute key="modelParameterNewDefinitions" value=""/>
