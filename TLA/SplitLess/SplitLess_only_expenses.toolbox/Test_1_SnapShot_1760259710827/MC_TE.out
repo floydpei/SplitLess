@@ -1,0 +1,238 @@
+@!@!@STARTMSG 2262:0 @!@!@
+TLC2 Version 2.16 of 31 December 2020 (rev: cdddf55)
+@!@!@ENDMSG 2262 @!@!@
+@!@!@STARTMSG 2187:0 @!@!@
+Running breadth-first search Model-Checking with fp 40 and seed -7650546797978915359 with 4 workers on 8 cores with 1182MB heap and 2657MB offheap memory [pid: 9135] (Linux 6.14.0-33-generic amd64, AdoptOpenJDK 14.0.1 x86_64, OffHeapDiskFPSet, DiskStateQueue).
+@!@!@ENDMSG 2187 @!@!@
+@!@!@STARTMSG 2220:0 @!@!@
+Starting SANY...
+@!@!@ENDMSG 2220 @!@!@
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/SplitLess/SplitLess_only_expenses.toolbox/Test_1/MC.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/SplitLess/SplitLess_only_expenses.toolbox/Test_1/SplitLess_only_expenses.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/TLC.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/Naturals.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/Sequences.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module SplitLess_only_expenses
+Semantic processing of module TLC
+Semantic processing of module MC
+@!@!@STARTMSG 2219:0 @!@!@
+SANY finished.
+@!@!@ENDMSG 2219 @!@!@
+@!@!@STARTMSG 2185:0 @!@!@
+Starting... (2025-10-12 11:01:41)
+@!@!@ENDMSG 2185 @!@!@
+@!@!@STARTMSG 2189:0 @!@!@
+Computing initial states...
+@!@!@ENDMSG 2189 @!@!@
+@!@!@STARTMSG 2190:0 @!@!@
+Finished computing initial states: 1 distinct state generated at 2025-10-12 11:01:41.
+@!@!@ENDMSG 2190 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(8) at 2025-10-12 11:01:44: 974,845 states generated (974,845 s/min), 81,797 distinct states found (81,797 ds/min), 41,753 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2193:0 @!@!@
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.1E-8
+  based on the actual fingerprints:  val = 7.2E-11
+@!@!@ENDMSG 2193 @!@!@
+@!@!@STARTMSG 2201:0 @!@!@
+The coverage statistics at 2025-10-12 11:01:50
+@!@!@ENDMSG 2201 @!@!@
+@!@!@STARTMSG 2773:0 @!@!@
+<Init line 14, col 1 to line 14, col 4 of module SplitLess_only_expenses>: 1:1
+@!@!@ENDMSG 2773 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 15, col 5 to line 15, col 72 of module SplitLess_only_expenses: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<AddExpense line 33, col 1 to line 33, col 10 of module SplitLess_only_expenses (39 9 41 80)>: 13566:172872
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 39, col 12 to line 39, col 45 of module SplitLess_only_expenses: 8643600
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 39, col 12 to line 39, col 32 of module SplitLess_only_expenses: 8470728
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 39, col 36 to line 39, col 45 of module SplitLess_only_expenses: 8470728
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 41, col 15 to line 41, col 80 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 41, col 35 to line 41, col 80 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 41, col 37 to line 41, col 52 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 41, col 61 to line 41, col 79 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 41, col 70 to line 41, col 79 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 40, col 30 to line 40, col 132 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 40, col 32 to line 40, col 41 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 40, col 44 to line 40, col 60 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 40, col 74 to line 40, col 92 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 23, col 3 to line 26, col 62 of module SplitLess_only_expenses: 691488
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 23, col 6 to line 23, col 18 of module SplitLess_only_expenses: 691488
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 25, col 17 to line 25, col 43 of module SplitLess_only_expenses: 518616
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 26, col 12 to line 26, col 62 of module SplitLess_only_expenses: 518616
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 40, col 86 to line 40, col 91 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 40, col 95 to line 40, col 111 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 40, col 114 to line 40, col 130 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<DeleteExpense line 44, col 1 to line 44, col 13 of module SplitLess_only_expenses (47 9 50 80)>: 96376:172872
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 47, col 12 to line 47, col 45 of module SplitLess_only_expenses: 1231713
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 47, col 12 to line 47, col 32 of module SplitLess_only_expenses: 1058841
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 47, col 36 to line 47, col 45 of module SplitLess_only_expenses: 1058841
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 48, col 12 to line 48, col 48 of module SplitLess_only_expenses: 1210104
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 48, col 12 to line 48, col 40 of module SplitLess_only_expenses: 1037232
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 48, col 44 to line 48, col 48 of module SplitLess_only_expenses: 1037232
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 49, col 12 to line 49, col 48 of module SplitLess_only_expenses: 518616
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 49, col 12 to line 49, col 40 of module SplitLess_only_expenses: 345744
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 49, col 44 to line 49, col 48 of module SplitLess_only_expenses: 345744
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 50, col 12 to line 50, col 80 of module SplitLess_only_expenses: 172872
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<ModifyExpense line 53, col 1 to line 53, col 13 of module SplitLess_only_expenses (57 9 60 117)>: 7706:1382976
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 57, col 12 to line 57, col 45 of module SplitLess_only_expenses: 9853704
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 57, col 12 to line 57, col 32 of module SplitLess_only_expenses: 8470728
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 57, col 36 to line 57, col 45 of module SplitLess_only_expenses: 8470728
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 58, col 12 to line 58, col 48 of module SplitLess_only_expenses: 9680832
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 58, col 12 to line 58, col 40 of module SplitLess_only_expenses: 8297856
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 58, col 44 to line 58, col 48 of module SplitLess_only_expenses: 8297856
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 59, col 12 to line 59, col 48 of module SplitLess_only_expenses: 4148928
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 59, col 12 to line 59, col 40 of module SplitLess_only_expenses: 2765952
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 59, col 44 to line 59, col 48 of module SplitLess_only_expenses: 2765952
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 60, col 12 to line 60, col 117 of module SplitLess_only_expenses: 1382976
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 60, col 32 to line 60, col 117 of module SplitLess_only_expenses: 1382976
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 60, col 34 to line 60, col 49 of module SplitLess_only_expenses: 1382976
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 60, col 58 to line 60, col 79 of module SplitLess_only_expenses: 1382976
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 60, col 82 to line 60, col 116 of module SplitLess_only_expenses: 1382976
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 60, col 98 to line 60, col 116 of module SplitLess_only_expenses: 1382976
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 23, col 3 to line 26, col 62 of module SplitLess_only_expenses: 5531904
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 23, col 6 to line 23, col 18 of module SplitLess_only_expenses: 5531904
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 25, col 17 to line 25, col 43 of module SplitLess_only_expenses: 4148928
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 26, col 12 to line 26, col 62 of module SplitLess_only_expenses: 4148928
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 60, col 110 to line 60, col 115 of module SplitLess_only_expenses: 1382976
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Next line 89, col 1 to line 89, col 4 of module SplitLess_only_expenses (95 8 95 37)>: 0:117649
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 95, col 8 to line 95, col 37 of module SplitLess_only_expenses: 117649
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2774:0 @!@!@
+<TypeOK line 107, col 1 to line 107, col 6 of module SplitLess_only_expenses>
+@!@!@ENDMSG 2774 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 108, col 5 to line 108, col 81 of module SplitLess_only_expenses: 117649
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2202:0 @!@!@
+End of statistics.
+@!@!@ENDMSG 2202 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(9) at 2025-10-12 11:01:50: 1,846,370 states generated (11,904,384 s/min), 117,649 distinct states found (758,536 ds/min), 0 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2199:0 @!@!@
+1846370 states generated, 117649 distinct states found, 0 states left on queue.
+@!@!@ENDMSG 2199 @!@!@
+@!@!@STARTMSG 2194:0 @!@!@
+The depth of the complete state graph search is 9.
+@!@!@ENDMSG 2194 @!@!@
+@!@!@STARTMSG 2268:0 @!@!@
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 31 and the 95th percentile is 3).
+@!@!@ENDMSG 2268 @!@!@
+@!@!@STARTMSG 2186:0 @!@!@
+Finished in 9311ms at (2025-10-12 11:01:50)
+@!@!@ENDMSG 2186 @!@!@

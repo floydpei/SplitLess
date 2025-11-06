@@ -1,0 +1,36 @@
+{
+  "recorded_expenses": {
+    "6485e6f0": {
+      "eid": "6485e6f0",
+      "name": "e1",
+      "group": null,
+      "version": 3,
+      "payer": "c15ba962",
+      "amount": 25,
+      "deleted": false,
+      "shares": {
+        "c15ba962": 20,
+        "e42c27ce": 5
+      }
+    }
+  },
+  "groups": {
+    "4c902135": {
+      "gid": "4c902135",
+      "name": "Test",
+      "gifts_received": 0,
+      "members": {
+        "c15ba962": 1,
+        "e42c27ce": 1
+      },
+      "gifts_sent": {
+        "c15ba962": 0.0,
+        "e42c27ce": 0.0
+      }
+    }
+  },
+  "known_users": [
+    "c15ba962",
+    "e42c27ce"
+  ]
+}

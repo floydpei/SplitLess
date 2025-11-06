@@ -1,0 +1,615 @@
+@!@!@STARTMSG 2262:0 @!@!@
+TLC2 Version 2.16 of 31 December 2020 (rev: cdddf55)
+@!@!@ENDMSG 2262 @!@!@
+@!@!@STARTMSG 2187:0 @!@!@
+Running breadth-first search Model-Checking with fp 42 and seed -3047804730463419512 with 7 workers on 8 cores with 3262MB heap and 7335MB offheap memory [pid: 7323] (Linux 6.14.0-33-generic amd64, AdoptOpenJDK 14.0.1 x86_64, OffHeapDiskFPSet, DiskStateQueue).
+@!@!@ENDMSG 2187 @!@!@
+@!@!@STARTMSG 2220:0 @!@!@
+Starting SANY...
+@!@!@ENDMSG 2220 @!@!@
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/SplitLess/SplitLess_groups_expenses.toolbox/Model_1/MC.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/SplitLess/SplitLess_groups_expenses.toolbox/Model_1/SplitLess_groups_expenses.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/TLC.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/Naturals.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/Sequences.tla
+Parsing file /home/floyd/Desktop/Uni/Master/2_Semester/Masters Project/TLA+ Toolbox/toolbox/plugins/org.lamport.tlatools_1.0.0.202012311918/tla2sany/StandardModules/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module SplitLess_groups_expenses
+Semantic processing of module TLC
+Semantic processing of module MC
+@!@!@STARTMSG 2219:0 @!@!@
+SANY finished.
+@!@!@ENDMSG 2219 @!@!@
+@!@!@STARTMSG 2185:0 @!@!@
+Starting... (2025-10-24 09:02:23)
+@!@!@ENDMSG 2185 @!@!@
+@!@!@STARTMSG 2189:0 @!@!@
+Computing initial states...
+@!@!@ENDMSG 2189 @!@!@
+@!@!@STARTMSG 2190:0 @!@!@
+Finished computing initial states: 1 distinct state generated at 2025-10-24 09:02:24.
+@!@!@ENDMSG 2190 @!@!@
+@!@!@STARTMSG 2110:1 @!@!@
+Invariant inv_176128934255417000 is violated.
+@!@!@ENDMSG 2110 @!@!@
+@!@!@STARTMSG 2121:1 @!@!@
+The behavior up to this point is:
+@!@!@ENDMSG 2121 @!@!@
+@!@!@STARTMSG 2217:4 @!@!@
+1: <Initial predicate>
+/\ recordedExpenses = (eid1 :> NO_EXPENSE @@ eid2 :> NO_EXPENSE)
+/\ groups = (gid1 :> NO_GROUP @@ gid2 :> NO_GROUP)
+
+@!@!@ENDMSG 2217 @!@!@
+@!@!@STARTMSG 2217:4 @!@!@
+2: <CreateGroup line 75, col 9 to line 78, col 41 of module SplitLess_groups_expenses>
+/\ recordedExpenses = (eid1 :> NO_EXPENSE @@ eid2 :> NO_EXPENSE)
+/\ groups = (gid1 :> [id |-> gid1, creator |-> b, members |-> (a :> FALSE @@ b :> TRUE), expenseids |-> {}, totalGifted |-> 0, individualGiftsSent |-> (a :> 0 @@ b :> 0), passiveMembers |-> (a :> FALSE @@ b :> FALSE)] @@ gid2 :> NO_GROUP)
+
+@!@!@ENDMSG 2217 @!@!@
+@!@!@STARTMSG 2217:4 @!@!@
+3: <CreateExpense line 107, col 13 to line 111, col 41 of module SplitLess_groups_expenses>
+/\ recordedExpenses = (eid1 :> [id |-> eid1, group |-> NO_GROUP, payer |-> a, amount |-> 1, shares |-> (a :> 0 @@ b :> 1), deleted |-> FALSE] @@ eid2 :> NO_EXPENSE)
+/\ groups = (gid1 :> [id |-> gid1, creator |-> b, members |-> (a :> FALSE @@ b :> TRUE), expenseids |-> {}, totalGifted |-> 0, individualGiftsSent |-> (a :> 0 @@ b :> 0), passiveMembers |-> (a :> FALSE @@ b :> FALSE)] @@ gid2 :> NO_GROUP)
+
+@!@!@ENDMSG 2217 @!@!@
+@!@!@STARTMSG 2217:4 @!@!@
+4: <AddExpenseToGroup line 117, col 13 to line 125, col 80 of module SplitLess_groups_expenses>
+/\ recordedExpenses = (eid1 :> [id |-> eid1, group |-> gid1, payer |-> a, amount |-> 1, shares |-> (a :> 0 @@ b :> 1), deleted |-> FALSE] @@ eid2 :> NO_EXPENSE)
+/\ groups = (gid1 :> [id |-> gid1, creator |-> b, members |-> (a :> FALSE @@ b :> TRUE), expenseids |-> {eid1}, totalGifted |-> 0, individualGiftsSent |-> (a :> 0 @@ b :> 0), passiveMembers |-> (a :> FALSE @@ b :> FALSE)] @@ gid2 :> NO_GROUP)
+
+@!@!@ENDMSG 2217 @!@!@
+@!@!@STARTMSG 2201:0 @!@!@
+The coverage statistics at 2025-10-24 09:02:24
+@!@!@ENDMSG 2201 @!@!@
+@!@!@STARTMSG 2773:0 @!@!@
+<Init line 16, col 1 to line 16, col 4 of module SplitLess_groups_expenses>: 2:2
+@!@!@ENDMSG 2773 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 17, col 5 to line 18, col 58 of module SplitLess_groups_expenses: 2
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<CreateGroup line 72, col 1 to line 72, col 11 of module SplitLess_groups_expenses (75 9 78 41)>: 8:85
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 75, col 12 to line 75, col 33 of module SplitLess_groups_expenses: 284
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 75, col 12 to line 75, col 22 of module SplitLess_groups_expenses: 199
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 75, col 26 to line 75, col 33 of module SplitLess_groups_expenses: 199
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 77, col 15 to line 77, col 57 of module SplitLess_groups_expenses: 85
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 78, col 12 to line 78, col 41 of module SplitLess_groups_expenses: 85
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<AddMember line 80, col 1 to line 80, col 9 of module SplitLess_groups_expenses (83 9 87 41)>: 14:41
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 83, col 12 to line 83, col 33 of module SplitLess_groups_expenses: 433
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 83, col 12 to line 83, col 22 of module SplitLess_groups_expenses: 392
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 83, col 26 to line 83, col 33 of module SplitLess_groups_expenses: 392
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 84, col 12 to line 84, col 44 of module SplitLess_groups_expenses: 269
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 84, col 12 to line 84, col 37 of module SplitLess_groups_expenses: 228
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 84, col 41 to line 84, col 44 of module SplitLess_groups_expenses: 228
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 85, col 12 to line 85, col 49 of module SplitLess_groups_expenses: 155
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 85, col 12 to line 85, col 41 of module SplitLess_groups_expenses: 114
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 85, col 45 to line 85, col 49 of module SplitLess_groups_expenses: 114
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 86, col 12 to line 86, col 111 of module SplitLess_groups_expenses: 41
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 87, col 12 to line 87, col 41 of module SplitLess_groups_expenses: 41
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<LeaveGroup line 89, col 1 to line 89, col 10 of module SplitLess_groups_expenses (92 9 97 47)>: 34:57
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 92, col 12 to line 92, col 33 of module SplitLess_groups_expenses: 253
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 92, col 12 to line 92, col 22 of module SplitLess_groups_expenses: 196
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 92, col 26 to line 92, col 33 of module SplitLess_groups_expenses: 196
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 93, col 12 to line 93, col 44 of module SplitLess_groups_expenses: 171
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 93, col 12 to line 93, col 37 of module SplitLess_groups_expenses: 114
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 93, col 41 to line 93, col 44 of module SplitLess_groups_expenses: 114
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 94, col 12 to line 94, col 35 of module SplitLess_groups_expenses: 57
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 96, col 18 to line 96, col 71 of module SplitLess_groups_expenses: 57
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 97, col 18 to line 97, col 47 of module SplitLess_groups_expenses: 57
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<CreateExpense line 103, col 1 to line 103, col 13 of module SplitLess_groups_expenses (107 13 111 41)>: 407:877
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 107, col 16 to line 107, col 38 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 107, col 16 to line 107, col 34 of module SplitLess_groups_expenses: 1539
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 25, col 3 to line 27, col 61 of module SplitLess_groups_expenses: 4617
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 25, col 6 to line 25, col 18 of module SplitLess_groups_expenses: 4617
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 26, col 17 to line 26, col 43 of module SplitLess_groups_expenses: 3078
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 27, col 11 to line 27, col 61 of module SplitLess_groups_expenses: 3078
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 107, col 28 to line 107, col 33 of module SplitLess_groups_expenses: 1539
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 108, col 16 to line 108, col 49 of module SplitLess_groups_expenses: 2030
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 108, col 16 to line 108, col 36 of module SplitLess_groups_expenses: 1153
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 108, col 40 to line 108, col 49 of module SplitLess_groups_expenses: 1153
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 110, col 22 to line 110, col 87 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 110, col 42 to line 110, col 87 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 110, col 44 to line 110, col 59 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 110, col 68 to line 110, col 86 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 110, col 77 to line 110, col 86 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 109, col 34 to line 109, col 153 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 109, col 36 to line 109, col 45 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 109, col 48 to line 109, col 65 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 109, col 68 to line 109, col 82 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 109, col 96 to line 109, col 114 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 25, col 3 to line 27, col 61 of module SplitLess_groups_expenses: 2631
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 25, col 6 to line 25, col 18 of module SplitLess_groups_expenses: 2631
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 26, col 17 to line 26, col 43 of module SplitLess_groups_expenses: 1754
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 27, col 11 to line 27, col 61 of module SplitLess_groups_expenses: 1754
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 109, col 108 to line 109, col 113 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 109, col 117 to line 109, col 133 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 109, col 136 to line 109, col 152 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 111, col 22 to line 111, col 41 of module SplitLess_groups_expenses: 877
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<AddExpenseToGroup line 113, col 1 to line 113, col 17 of module SplitLess_groups_expenses (117 13 125 80)>: 8:9
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 117, col 16 to line 117, col 37 of module SplitLess_groups_expenses: 380
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 117, col 16 to line 117, col 26 of module SplitLess_groups_expenses: 375
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 117, col 30 to line 117, col 37 of module SplitLess_groups_expenses: 375
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 118, col 16 to line 118, col 49 of module SplitLess_groups_expenses: 226
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 118, col 16 to line 118, col 36 of module SplitLess_groups_expenses: 221
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 118, col 40 to line 118, col 49 of module SplitLess_groups_expenses: 221
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 119, col 16 to line 119, col 48 of module SplitLess_groups_expenses: 45
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 119, col 16 to line 119, col 41 of module SplitLess_groups_expenses: 40
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 119, col 45 to line 119, col 48 of module SplitLess_groups_expenses: 40
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 120, col 16 to line 120, col 53 of module SplitLess_groups_expenses: 25
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 120, col 16 to line 120, col 42 of module SplitLess_groups_expenses: 20
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 120, col 46 to line 120, col 53 of module SplitLess_groups_expenses: 20
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 122, col 16 to line 122, col 122 of module SplitLess_groups_expenses: 25
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  |line 122, col 16 to line 122, col 66 of module SplitLess_groups_expenses: 20:33
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 122, col 31 to line 122, col 65 of module SplitLess_groups_expenses: 40
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 122, col 23 to line 122, col 27 of module SplitLess_groups_expenses: 20
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 122, col 78 to line 122, col 122 of module SplitLess_groups_expenses: 20
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 122, col 93 to line 122, col 121 of module SplitLess_groups_expenses: 40
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 122, col 85 to line 122, col 89 of module SplitLess_groups_expenses: 20
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 124, col 22 to line 124, col 87 of module SplitLess_groups_expenses: 5
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 124, col 42 to line 124, col 87 of module SplitLess_groups_expenses: 9
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 125, col 22 to line 125, col 80 of module SplitLess_groups_expenses: 5
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 125, col 32 to line 125, col 80 of module SplitLess_groups_expenses: 9
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RemoveExpenseFromGroup line 127, col 1 to line 127, col 22 of module SplitLess_groups_expenses (131 13 141 70)>: 0:0
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 131, col 16 to line 131, col 37 of module SplitLess_groups_expenses: 344
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 132, col 16 to line 132, col 49 of module SplitLess_groups_expenses: 204
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 133, col 16 to line 133, col 48 of module SplitLess_groups_expenses: 30
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 134, col 16 to line 134, col 48 of module SplitLess_groups_expenses: 15
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 140, col 22 to line 140, col 52 of module SplitLess_groups_expenses: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 141, col 22 to line 141, col 70 of module SplitLess_groups_expenses: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<ModifyExpenseParameters line 144, col 1 to line 144, col 23 of module SplitLess_groups_expenses (148 13 162 58)>: 0:54
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 148, col 16 to line 148, col 49 of module SplitLess_groups_expenses: 742
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 148, col 16 to line 148, col 36 of module SplitLess_groups_expenses: 688
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 148, col 40 to line 148, col 49 of module SplitLess_groups_expenses: 688
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 149, col 16 to line 149, col 50 of module SplitLess_groups_expenses: 198
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 149, col 16 to line 149, col 42 of module SplitLess_groups_expenses: 144
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 149, col 46 to line 149, col 50 of module SplitLess_groups_expenses: 144
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 150, col 16 to line 150, col 38 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 150, col 16 to line 150, col 34 of module SplitLess_groups_expenses: 72
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 25, col 3 to line 27, col 61 of module SplitLess_groups_expenses: 216
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 25, col 6 to line 25, col 18 of module SplitLess_groups_expenses: 216
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 26, col 17 to line 26, col 43 of module SplitLess_groups_expenses: 144
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 27, col 11 to line 27, col 61 of module SplitLess_groups_expenses: 144
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 150, col 28 to line 150, col 33 of module SplitLess_groups_expenses: 72
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 151, col 16 to line 154, col 24 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 155, col 19 to line 155, col 56 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 157, col 24 to line 157, col 129 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 157, col 44 to line 157, col 129 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 157, col 46 to line 157, col 61 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 157, col 70 to line 157, col 91 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 157, col 94 to line 157, col 128 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 157, col 110 to line 157, col 128 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 25, col 3 to line 27, col 61 of module SplitLess_groups_expenses: 162
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 25, col 6 to line 25, col 18 of module SplitLess_groups_expenses: 162
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 26, col 17 to line 26, col 43 of module SplitLess_groups_expenses: 108
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 27, col 11 to line 27, col 61 of module SplitLess_groups_expenses: 108
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 157, col 122 to line 157, col 127 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 158, col 24 to line 158, col 43 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 161, col 28 to line 161, col 69 of module SplitLess_groups_expenses: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 162, col 28 to line 162, col 58 of module SplitLess_groups_expenses: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<DeleteExpense line 164, col 1 to line 164, col 13 of module SplitLess_groups_expenses (167 13 175 63)>: 18:18
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 167, col 16 to line 167, col 49 of module SplitLess_groups_expenses: 190
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 167, col 16 to line 167, col 36 of module SplitLess_groups_expenses: 172
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 167, col 40 to line 167, col 49 of module SplitLess_groups_expenses: 172
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 168, col 16 to line 168, col 50 of module SplitLess_groups_expenses: 54
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 168, col 16 to line 168, col 42 of module SplitLess_groups_expenses: 36
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 168, col 46 to line 168, col 50 of module SplitLess_groups_expenses: 36
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 169, col 16 to line 169, col 52 of module SplitLess_groups_expenses: 36
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 169, col 16 to line 169, col 44 of module SplitLess_groups_expenses: 18
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 169, col 48 to line 169, col 52 of module SplitLess_groups_expenses: 18
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 170, col 16 to line 172, col 24 of module SplitLess_groups_expenses: 18
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 174, col 19 to line 175, col 63 of module SplitLess_groups_expenses: 18
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Next line 222, col 1 to line 222, col 4 of module SplitLess_groups_expenses (231 8 231 45)>: 0:43
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 231, col 8 to line 231, col 45 of module SplitLess_groups_expenses: 43
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2774:0 @!@!@
+<TypeOK line 241, col 1 to line 241, col 6 of module SplitLess_groups_expenses>
+@!@!@ENDMSG 2774 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 242, col 3 to line 243, col 63 of module SplitLess_groups_expenses: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2774:0 @!@!@
+<Inv_Conservertaion_of_amount line 246, col 1 to line 246, col 28 of module SplitLess_groups_expenses>
+@!@!@ENDMSG 2774 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 247, col 3 to line 250, col 41 of module SplitLess_groups_expenses: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 248, col 5 to line 250, col 41 of module SplitLess_groups_expenses: 980
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 248, col 5 to line 248, col 38 of module SplitLess_groups_expenses: 980
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 249, col 16 to line 249, col 36 of module SplitLess_groups_expenses: 540
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 250, col 10 to line 250, col 41 of module SplitLess_groups_expenses: 540
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 250, col 10 to line 250, col 17 of module SplitLess_groups_expenses: 540
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 250, col 21 to line 250, col 41 of module SplitLess_groups_expenses: 540
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 25, col 3 to line 27, col 61 of module SplitLess_groups_expenses: 1620
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 25, col 6 to line 25, col 18 of module SplitLess_groups_expenses: 1620
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 26, col 17 to line 26, col 43 of module SplitLess_groups_expenses: 1080
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 27, col 11 to line 27, col 61 of module SplitLess_groups_expenses: 1080
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 250, col 33 to line 250, col 40 of module SplitLess_groups_expenses: 540
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 247, col 14 to line 247, col 36 of module SplitLess_groups_expenses: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2774:0 @!@!@
+<inv_176128934255416000 line 40, col 1 to line 40, col 22 of module MC>
+@!@!@ENDMSG 2774 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 41, col 1 to line 41, col 34 of module MC: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 41, col 4 to line 41, col 34 of module MC: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 262, col 3 to line 265, col 45 of module SplitLess_groups_expenses: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 263, col 5 to line 265, col 45 of module SplitLess_groups_expenses: 980
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 263, col 5 to line 263, col 26 of module SplitLess_groups_expenses: 980
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 264, col 7 to line 265, col 45 of module SplitLess_groups_expenses: 640
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 265, col 10 to line 265, col 45 of module SplitLess_groups_expenses: 8
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 264, col 18 to line 264, col 39 of module SplitLess_groups_expenses: 640
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 262, col 14 to line 262, col 31 of module SplitLess_groups_expenses: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2774:0 @!@!@
+<inv_176128934255417000 line 44, col 1 to line 44, col 22 of module MC>
+@!@!@ENDMSG 2774 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 45, col 1 to line 45, col 23 of module MC: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 45, col 4 to line 45, col 23 of module MC: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 269, col 3 to line 273, col 44 of module SplitLess_groups_expenses: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 270, col 5 to line 273, col 44 of module SplitLess_groups_expenses: 978
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 270, col 5 to line 270, col 26 of module SplitLess_groups_expenses: 978
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||line 271, col 23 to line 271, col 69 of module SplitLess_groups_expenses: 640:1280
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 271, col 39 to line 271, col 67 of module SplitLess_groups_expenses: 1280
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 271, col 31 to line 271, col 35 of module SplitLess_groups_expenses: 640
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 272, col 20 to line 272, col 70 of module SplitLess_groups_expenses: 640
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 25, col 3 to line 27, col 61 of module SplitLess_groups_expenses: 1280
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 25, col 6 to line 25, col 18 of module SplitLess_groups_expenses: 1280
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 26, col 17 to line 26, col 43 of module SplitLess_groups_expenses: 640
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 27, col 11 to line 27, col 61 of module SplitLess_groups_expenses: 640
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  |||||line 272, col 32 to line 272, col 69 of module SplitLess_groups_expenses: 640:640
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 273, col 10 to line 273, col 44 of module SplitLess_groups_expenses: 640
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 269, col 14 to line 269, col 31 of module SplitLess_groups_expenses: 490
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2202:0 @!@!@
+End of statistics.
+@!@!@ENDMSG 2202 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(5) at 2025-10-24 09:02:24: 1,160 states generated (34,817 s/min), 490 distinct states found (14,707 ds/min), 439 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2199:0 @!@!@
+1160 states generated, 490 distinct states found, 439 states left on queue.
+@!@!@ENDMSG 2199 @!@!@
+@!@!@STARTMSG 2194:0 @!@!@
+The depth of the complete state graph search is 5.
+@!@!@ENDMSG 2194 @!@!@
+@!@!@STARTMSG 2268:0 @!@!@
+The average outdegree of the complete state graph is 11 (minimum is 4, the maximum 16 and the 95th percentile is 16).
+@!@!@ENDMSG 2268 @!@!@
+@!@!@STARTMSG 2186:0 @!@!@
+Finished in 2006ms at (2025-10-24 09:02:24)
+@!@!@ENDMSG 2186 @!@!@

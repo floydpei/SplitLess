@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.lamport.tla.toolbox.tool.tlc.modelCheck">
+    <stringAttribute key="TLCCmdLineParameters" value=""/>
+    <intAttribute key="collectCoverage" value="1"/>
+    <stringAttribute key="configurationName" value="Model_1"/>
+    <booleanAttribute key="deferLiveness" value="false"/>
+    <intAttribute key="dfidDepth" value="100"/>
+    <booleanAttribute key="dfidMode" value="false"/>
+    <intAttribute key="distributedFPSetCount" value="0"/>
+    <stringAttribute key="distributedNetworkInterface" value="192.168.178.80"/>
+    <intAttribute key="distributedNodesCount" value="1"/>
+    <stringAttribute key="distributedTLC" value="off"/>
+    <stringAttribute key="distributedTLCVMArgs" value=""/>
+    <intAttribute key="fpBits" value="1"/>
+    <intAttribute key="fpIndex" value="23"/>
+    <booleanAttribute key="fpIndexRandom" value="true"/>
+    <intAttribute key="maxHeapSize" value="75"/>
+    <intAttribute key="maxSetSize" value="1000000"/>
+    <booleanAttribute key="mcMode" value="true"/>
+    <stringAttribute key="modelBehaviorInit" value=""/>
+    <stringAttribute key="modelBehaviorNext" value=""/>
+    <stringAttribute key="modelBehaviorSpec" value="FairSpec"/>
+    <intAttribute key="modelBehaviorSpecType" value="1"/>
+    <stringAttribute key="modelBehaviorVars" value="actionCounter, replicas"/>
+    <stringAttribute key="modelComments" value=""/>
+    <booleanAttribute key="modelCorrectnessCheckDeadlock" value="true"/>
+    <listAttribute key="modelCorrectnessInvariants">
+        <listEntry value="1TypeOK"/>
+        <listEntry value="1Inv_Conservation_of_amount"/>
+        <listEntry value="1Inv_ExpenseGroupExists"/>
+        <listEntry value="1Inv_GroupBalanceZero"/>
+    </listAttribute>
+    <listAttribute key="modelCorrectnessProperties">
+        <listEntry value="0Liveness_ExpenseVersionPropagates"/>
+        <listEntry value="0Liveness_GroupMembershipPropagates"/>
+        <listEntry value="0Liveness_ExpenseGroupAssignmentPropagates"/>
+    </listAttribute>
+    <intAttribute key="modelEditorOpenTabs" value="14"/>
+    <stringAttribute key="modelExpressionEval" value=""/>
+    <stringAttribute key="modelParameterActionConstraint" value=""/>
+    <listAttribute key="modelParameterConstants">
+        <listEntry value="POSSIBLE_EXPENSE_IDs;;{eid1, eid2};1;0"/>
+        <listEntry value="POSSIBLE_GROUP_IDs;;{gid1, gid2};1;0"/>
+        <listEntry value="POSSIBLE_SHARES;;[USERS -&gt; 0..1];0;0"/>
+        <listEntry value="POSSIBLE_REPLICA_IDs;;{r1, r2};1;0"/>
+        <listEntry value="NO_EXPENSE;;NO_EXPENSE;1;0"/>
+        <listEntry value="USERS;;{a, b};1;0"/>
+        <listEntry value="NO_GROUP;;NO_GROUP;1;0"/>
+        <listEntry value="ASSIGNED_REPLICA;;[ u \in USERS |-&gt; IF u = a THEN r1 ELSE r2];0;0"/>
+    </listAttribute>
+    <stringAttribute key="modelParameterContraint" value="actionCounter &lt;= 7"/>
+    <listAttribute key="modelParameterDefinitions"/>
+    <stringAttribute key="modelParameterModelValues" value="{}"/>
+    <stringAttribute key="modelParameterNewDefinitions" value=""/>
+    <intAttribute key="modelVersion" value="20191005"/>
+    <intAttribute key="numberOfWorkers" value="8"/>
+    <booleanAttribute key="recover" value="false"/>
+    <stringAttribute key="result.mail.address" value=""/>
+    <intAttribute key="simuAril" value="-1"/>
+    <intAttribute key="simuDepth" value="100"/>
+    <intAttribute key="simuSeed" value="-1"/>
+    <stringAttribute key="specName" value="SplitLess_replica_group_expenses"/>
+    <stringAttribute key="tlcResourcesProfile" value="local custom"/>
+    <stringAttribute key="view" value=""/>
+    <booleanAttribute key="visualizeStateGraph" value="false"/>
+</launchConfiguration>
