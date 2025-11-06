@@ -103,6 +103,11 @@ class ExpenseHandler:
     def remove_expense_from_group(actor: str, eid: str):
         expense = DataHandler.get_expense(actor, eid)
         gid = expense.get("group")
+
+        if not gid:
+            print("The expense with id " + eid + " is in no group on users " + actor + " replica.")
+            return
+        
         group = DataHandler.get_group(actor, gid)
 
         if not expense:

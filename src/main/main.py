@@ -37,11 +37,11 @@ def handle_startup():
         DataHandler.write_user_replica(replica_data)
 
     print(f"Replica loaded for {username}. You can now start using the app.")
-    return user_id, replica_data
+    return user_id
 
 
 if __name__ == "__main__":
-    user_id, user_replica_data = handle_startup()
+    user_id = handle_startup()
     gid = "4c902135"
     shares = {user_id: 20, "e42c27ce": 5}
     #eid = ExpenseHandler.create_expense(user_id, "e1", shares)
