@@ -364,12 +364,7 @@ Next ==
     \/ MergeReplicas
     \/ UNCHANGED <<replicas, actionCounter>>
 
-\* ----------------------------
-\* Specification
-\* ----------------------------
-Spec == Init /\ [][Next]_<<replicas, actionCounter>> 
 
-FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
 
 
 \* ----------------------------
@@ -418,71 +413,81 @@ Inv ==
   /\ Inv_ExpenseGroupExists
   /\ Inv_GroupBalanceZero
 
-
+           
 \* ----------------------------
 \* Liveness Helper
 \* ----------------------------
-ReplicasWithExpense(eid) ==
-    { r \in POSSIBLE_REPLICA_IDs : replicas[r].recordedExpenses[eid] # NO_EXPENSE }
+AllReplicasHaveAtLeastExpenseVersion(eid, version) ==
+    \A rid \in POSSIBLE_REPLICA_IDs :
+          /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+          /\ replicas[rid].recordedExpenses[eid].version >= version
 
-ExpenseVersions(eid) ==
-    LET rs == ReplicasWithExpense(eid)
-    IN { replicas[r].recordedExpenses[eid].version : r \in rs }
-
-MaxExpenseVersion(eid) ==
-    LET versions == ExpenseVersions(eid)
-    IN IF versions = {} THEN 0
-       ELSE CHOOSE v \in versions : \A w \in versions : v >= w
-     
-AllReplicasCaughtUpExpenseVersion(eid) ==
-    LET v == MaxExpenseVersion(eid)
-    IN \A r \in POSSIBLE_REPLICA_IDs :
-         replicas[r].recordedExpenses[eid] # NO_EXPENSE =>
-            replicas[r].recordedExpenses[eid].version >= v
-
-
-ReplicasWithGroup(gid) ==
-    { r \in POSSIBLE_REPLICA_IDs : replicas[r].groups[gid] # NO_GROUP }
-    
-MaxGroupMemberCounter(gid, u) ==
-    LET rs == ReplicasWithGroup(gid)
-        counters == { replicas[r].groups[gid].members[u] : r \in rs }
-    IN IF counters = {} THEN 0
-       ELSE CHOOSE c \in counters : \A d \in counters : c >= d
-       
-AllReplicasCaughtUpMember(gid, u) ==
-    LET maxC == MaxGroupMemberCounter(gid, u)
-    IN \A r \in POSSIBLE_REPLICA_IDs :
-         replicas[r].groups[gid] # NO_GROUP =>
-           replicas[r].groups[gid].members[u] >= maxC
-
-AllReplicasAgreeOnExpenseGroup(eid) ==
-    \A r1, r2 \in POSSIBLE_REPLICA_IDs :
-        /\ replicas[r1].recordedExpenses[eid] # NO_EXPENSE
-        /\ replicas[r2].recordedExpenses[eid] # NO_EXPENSE
-        => replicas[r1].recordedExpenses[eid].group = replicas[r2].recordedExpenses[eid].group
-
+AllReplicasHaveAtLeastGroupMemberCounter(gid, user, counter) ==
+    \A rid \in POSSIBLE_REPLICA_IDs :
+        /\ replicas[rid].groups[gid] # NO_GROUP
+        /\ replicas[rid].groups[gid].members[user] >= counter
   
 \* ----------------------------
 \* Liveness
 \* ----------------------------
 
-Liveness_ExpenseVersionPropagates ==
-    \A eid \in POSSIBLE_EXPENSE_IDs : []<>(AllReplicasCaughtUpExpenseVersion(eid))
+\* Expense version captures modifications and group membership
+Liveness_ExpensePropagates ==
+    \A rid \in POSSIBLE_REPLICA_IDs :
+        \A eid \in POSSIBLE_EXPENSE_IDs :
+            []<>(replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+                    => AllReplicasHaveAtLeastExpenseVersion(eid, replicas[rid].recordedExpenses[eid].version) )
+            \*/\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+            \*=> []<>(AllReplicasHaveAtLeastExpenseVersion(eid, replicas[rid].recordedExpenses[eid].version))
+            
+Liveness_GroupMemberShipPropagates ==
+    \A rid \in POSSIBLE_REPLICA_IDs :
+        \A gid \in POSSIBLE_GROUP_IDs:
+            \A user \in USERS:
+                []<>(replicas[rid].groups[gid] # NO_GROUP
+                        => AllReplicasHaveAtLeastGroupMemberCounter(gid, user, replicas[rid].groups[gid].members[user]) )
+                        
+\*-----------------------------
+\* Safety Helper
+\*-----------------------------
 
-Liveness_GroupMembershipPropagates ==
-    \A gid \in POSSIBLE_GROUP_IDs :
-       \A u \in USERS :
-          []<>(AllReplicasCaughtUpMember(gid, u))
-          
-Liveness_ExpenseGroupAssignmentPropagates ==
-    \A eid \in POSSIBLE_EXPENSE_IDs : []<>(AllReplicasAgreeOnExpenseGroup(eid))
-    
-Liveness == /\ Liveness_ExpenseVersionPropagates
-            /\ Liveness_GroupMembershipPropagates
-            /\ Liveness_ExpenseGroupAssignmentPropagates
+NoDecreaseExpenseVersion ==
+  \A rid \in POSSIBLE_REPLICA_IDs :
+  \A eid \in POSSIBLE_EXPENSE_IDs :
+    (replicas[rid].recordedExpenses[eid] # NO_EXPENSE)
+      =>
+      /\ replicas'[rid].recordedExpenses[eid] # NO_EXPENSE
+      /\ replicas'[rid].recordedExpenses[eid].version
+           >= replicas[rid].recordedExpenses[eid].version
+
+NoDecreaseGroupMembersCounter ==
+  \A rid \in POSSIBLE_REPLICA_IDs :
+  \A gid \in POSSIBLE_GROUP_IDs :
+  \A u \in USERS :
+    (replicas[rid].groups[gid] # NO_GROUP)
+      =>
+      /\ replicas'[rid].groups[gid] # NO_GROUP
+      /\ replicas'[rid].groups[gid].members[u]
+           >= replicas[rid].groups[gid].members[u]
+           
+\*-----------------------------
+\* Safety
+\*-----------------------------
+Safety_ExpenseVersionsNonDecreasing ==
+  [] [ NoDecreaseExpenseVersion ]_{<<replicas, actionCounter>>}
+  
+Safety_GroupMembersCounterNonDecreasing ==
+  [] [ NoDecreaseGroupMembersCounter ]_{<<replicas, actionCounter>>}
+
+
+\* ----------------------------
+\* Specification
+\* ----------------------------
+Spec == Init /\ [][Next]_<<replicas, actionCounter>> 
+
+FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Nov 06 14:29:30 CET 2025 by floyd
+\* Last modified Sat Nov 08 12:04:50 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd
