@@ -4,6 +4,7 @@ from user_manager import UserManager
 from expense_handler import Expense, ExpenseHandler
 from group_handler import GroupHandler, Group
 from balance_handler import BalanceHandler
+from cli_interface import CLIInterface
 
 def handle_startup():
     print("Welcome to SplitLess CLI")
@@ -42,36 +43,6 @@ def handle_startup():
 
 if __name__ == "__main__":
     user_id = handle_startup()
-    gid = "4c902135"
-    shares = {user_id: 20, "e42c27ce": 5}
-    #eid = ExpenseHandler.create_expense(user_id, "e1", shares)
-    #GroupHandler.add_member(user_id, "e42c27ce", gid)
-    #ExpenseHandler.add_expense_to_group(user_id, eid, gid)
-
-    group_dict = DataHandler.get_group(user_id, gid)
-    group = Group.from_dict(group_dict)
-    #print(group_dict)
-    #print(group)
-
-    GroupHandler.leave_group(user_id, gid)
-    group_dict = DataHandler.get_group(user_id, gid)
-    group = Group.from_dict(group_dict)
-    #print(group_dict)
-    print(group)
-
-    expense_dict = DataHandler.get_expense(user_id, "6485e6f0")
-    expense = Expense.from_dict(expense_dict)
-
-    #print(expense_dict)
-    print(expense)
-
-    ExpenseHandler.remove_expense_from_group(user_id, "6485e6f0")
-
-    group_dict = DataHandler.get_group(user_id, gid)
-    group = Group.from_dict(group_dict)
-    #print(group_dict)
-    print(group)
-    expense_dict = DataHandler.get_expense(user_id, "6485e6f0")
-    expense = Expense.from_dict(expense_dict)
-    #print(expense_dict)
-    print(expense)
+    print(user_id)
+    if user_id:
+        CLIInterface(user_id).run()

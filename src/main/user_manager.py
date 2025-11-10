@@ -59,7 +59,7 @@ class UserManager:
         DataHandler.write_user_replica(user_id, {
             "recorded_expenses": {},
             "groups": {},
-            "known_users": [user_id]
+            "known_users": {user_id: username}
         })
 
         return username, user_id

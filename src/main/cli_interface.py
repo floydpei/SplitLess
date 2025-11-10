@@ -1,0 +1,245 @@
+import sys
+import os
+from data_handler import DataHandler
+from user_manager import UserManager
+from group_handler import GroupHandler, Group
+from expense_handler import ExpenseHandler, Expense
+from balance_handler import BalanceHandler
+
+
+class CLIInterface:
+    def __init__(self, user_id):
+        self.user_id = user_id
+
+    def _resolve_entity(self, entity_type: str, name_or_id: str):
+        replica = DataHandler.get_user_replica(self.user_id)
+        entities = {}
+
+        if entity_type == "user":
+            entities = replica.get("known_users", {})
+        elif entity_type == "group":
+            entities = replica.get("groups", {})
+        elif entity_type == "expense":
+            entities = replica.get("recorded_expenses", {})
+        else:
+            raise ValueError("Invalid entity_type")
+
+        # exact ID match
+        if name_or_id in entities:
+            return name_or_id
+
+        # name match
+        matches = []
+        if entity_type == "user":
+            matches = [uid for uid, uname in entities.items() if uname == name_or_id]
+        else:
+            matches = [eid for eid, data in entities.items() if data.get("name") == name_or_id]
+
+        if not matches:
+            print(f"No {entity_type} found with name or id '{name_or_id}'.")
+            return None
+
+        if len(matches) == 1:
+            return matches[0]
+
+        # ambiguity handling
+        print(f"Multiple {entity_type}s found with that name:")
+        for eid in matches:
+            if entity_type == "user":
+                print(f"  - {entities[eid]} (id: {eid})")
+            elif entity_type == "group":
+                print(f"  - {entities[eid]['name']} (id: {eid})")
+            elif entity_type == "expense":
+                e = entities[eid]
+                print(f"  - {e['name']} (id: {eid}, amount={e.get('amount', 0)})")
+        chosen = input("Enter the id to use: ").strip()
+        if chosen in matches:
+            return chosen
+        print("Invalid choice.")
+        return None
+
+
+
+    def run(self):
+        print("Type 'help' to see available commands.\n")
+        while True:
+            try:
+                cmd_input = input("splitless> ").strip()
+                if not cmd_input:
+                    continue
+                parts = cmd_input.split()
+                cmd, args = parts[0], parts[1:]
+
+                if cmd in ("exit", "quit"):
+                    print("Exiting SplitLess CLI.")
+                    break
+                elif cmd == "help":
+                    self.print_help()
+                elif cmd == "show":
+                    self.cmd_show(args)
+                elif cmd == "group-create":
+                    self.cmd_group_create(args)
+                elif cmd == "group-add-member":
+                    self.cmd_group_add_member(args)
+                elif cmd == "group-leave":
+                    self.cmd_group_leave(args)
+                elif cmd == "expense-create":
+                    self.cmd_expense_create(args)
+                elif cmd == "expense-delete":
+                    self.cmd_expense_delete(args)
+                elif cmd == "expense-modify":
+                    self.cmd_expense_modify(args)
+                elif cmd == "expense-add-to-group":
+                    self.cmd_expense_add_to_group(args)
+                elif cmd == "expense-remove-from-group":
+                    self.cmd_expense_remove_from_group(args)
+                elif cmd == "balance":
+                    self.cmd_balance(args)
+                elif cmd == "clear":
+                    self.cmd_clear()
+                else:
+                    print("Unknown command. Type 'help' for available commands.")
+            except KeyboardInterrupt:
+                print("\nUse 'exit' or 'quit' to leave.")
+            except Exception as e:
+                print(f"Error: {e}")
+
+
+    def print_help(self):
+        print("""
+Available commands:
+  show all                          - Show full replica
+  show groups                       - Show all groups
+  show expenses                     - Show all expenses
+  show users                        - Show all known users
+  group-create <name>               - Create a new group
+  group-add-member <group> <user>   - Add user to group (name or id)
+  group-leave <group>               - Leave a group
+  expense-create <name> <payer_share>:<amount> [<other_share>:<amount> ...]
+                                    - Create a new expense
+  expense-delete <expense>          - Delete an expense
+  expense-modify <expense> <user>:<share> ...
+                                    - Modify expense shares
+  expense-add-to-group <expense> <group>
+                                    - Add expense to a group
+  expense-remove-from-group <expense>
+                                    - Remove expense from its group
+  balance <group> <user>            - Show your balance with a user in a group
+  exit / quit                       - Exit CLI
+""")
+
+    def cmd_show(self, args):
+        replica = DataHandler.get_user_replica(self.user_id)
+        if not args or args[0] == "all":
+            print(replica)
+        elif args[0] == "groups":
+            for g in replica.get("groups", {}).values():
+                print(Group.from_dict(g))
+        elif args[0] == "expenses":
+            for e in replica.get("recorded_expenses", {}).values():
+                print(Expense.from_dict(e))
+        elif args[0] == "users":
+            for uid, uname in replica.get("known_users", {}).items():
+                print(f"{uname} (id: {uid})")
+        else:
+            print("Usage: show [all|groups|expenses|users]")
+
+    def cmd_group_create(self, args):
+        if not args:
+            print("Usage: group-create <name>")
+            return
+        name = " ".join(args)
+        gid = GroupHandler.create_group(self.user_id, name)
+        print(f"Created group '{name}' with id {gid}")
+
+    def cmd_group_add_member(self, args):
+        if len(args) < 2:
+            print("Usage: group-add-member <group> <user>")
+            return
+        gid = self._resolve_entity("group", args[0])
+        uid = self._resolve_entity("user", args[1])
+        if gid and uid:
+            GroupHandler.add_member(self.user_id, uid, gid)
+
+    def cmd_group_leave(self, args):
+        if len(args) < 1:
+            print("Usage: group-leave <group>")
+            return
+        gid = self._resolve_entity("group", args[0])
+        if gid:
+            GroupHandler.leave_group(self.user_id, gid)
+
+    def cmd_expense_create(self, args):
+        if len(args) < 2:
+            print("Usage: expense-create <name> <user>:<share> ...")
+            return
+        name = args[0]
+        shares = {}
+        for share_part in args[1:]:
+            if ":" not in share_part:
+                print(f"Invalid share: {share_part}")
+                return
+            uname, val = share_part.split(":")
+            uid = self._resolve_entity("user", uname)
+            if not uid:
+                return
+            shares[uid] = float(val)
+        eid = ExpenseHandler.create_expense(self.user_id, name, shares)
+        if eid != -1:
+            print(f"Created expense '{name}' with id {eid}")
+
+    def cmd_expense_delete(self, args):
+        if len(args) < 1:
+            print("Usage: expense-delete <expense>")
+            return
+        eid = self._resolve_entity("expense", args[0])
+        if eid:
+            ExpenseHandler.delete_expense(self.user_id, eid)
+
+    def cmd_expense_modify(self, args):
+        if len(args) < 2:
+            print("Usage: expense-modify <expense> <user>:<share> ...")
+            return
+        eid = self._resolve_entity("expense", args[0])
+        shares = {}
+        for s in args[1:]:
+            uname, val = s.split(":")
+            uid = self._resolve_entity("user", uname)
+            if not uid:
+                return
+            shares[uid] = float(val)
+        if eid:
+            ExpenseHandler.modify_expense_parameters(self.user_id, eid, shares)
+
+    def cmd_expense_add_to_group(self, args):
+        if len(args) < 2:
+            print("Usage: expense-add-to-group <expense> <group>")
+            return
+        eid = self._resolve_entity("expense", args[0])
+        gid = self._resolve_entity("group", args[1])
+        if eid and gid:
+            ExpenseHandler.add_expense_to_group(self.user_id, eid, gid)
+
+    def cmd_expense_remove_from_group(self, args):
+        if len(args) < 1:
+            print("Usage: expense-remove-from-group <expense>")
+            return
+        eid = self._resolve_entity("expense", args[0])
+        if eid:
+            ExpenseHandler.remove_expense_from_group(self.user_id, eid)
+
+    def cmd_balance(self, args):
+        if len(args) < 2:
+            print("Usage: balance <group> <user>")
+            return
+        gid = self._resolve_entity("group", args[0])
+        uid = self._resolve_entity("user", args[1])
+        if gid and uid:
+            balance = BalanceHandler.get_balance(self.user_id, uid, gid)
+            if balance == -1:
+                return
+            print(f"Balance of user {args[1]} (id: {uid}) in group {args[0]} (id: {gid}): {balance}")
+
+    def cmd_clear(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+

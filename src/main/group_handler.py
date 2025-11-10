@@ -29,14 +29,53 @@ class Group:
 class GroupHandler:
 
     @staticmethod
-    def is_member(user_id, group):
-        if user_id not in group["members"]: return False
-        return group["members"][user_id] % 2 == 1
+    def is_member(actor, group):
+        if actor not in group["members"]: return False
+        return group["members"][actor] % 2 == 1
     
     @staticmethod
-    def was_ever_member(user_id, group):
-        if user_id not in group["members"]: return False
-        return group["members"][user_id] > 0
+    def was_ever_member(actor, group):
+        if actor not in group["members"]: return False
+        return group["members"][actor] > 0
+    
+    @staticmethod
+    def get_members(actor: str, group: Group): 
+        members = []
+        for user in group.get("members"):
+            if GroupHandler.is_member(user, group): members.append(user)
+        return members
+    
+    @staticmethod
+    def get_amount_members(actor: str, group: Group):
+        return GroupHandler.get_members(actor, group).length
+    
+    @staticmethod
+    def get_balances_in_group(actor: str, gid: str):
+        replica = DataHandler.get_user_replica(actor)
+        if not replica:
+            print("User " + actor + " replica does not exist on local storage.")
+            return
+        group = replica.get("groups").get(gid)
+        if not group: 
+            print("Group " + gid + " does not exist on users " + actor + " replica.")
+            return
+        
+        group_members = GroupHandler.get_members(actor, group)
+        balances = {}
+        for member in group_members:
+            balances[member] = BalanceHandler.get_balance(actor, member, gid)
+
+        return balances
+
+    @staticmethod
+    def get_lowest_balance_in_group(actor: str, gid: str):
+        balances = GroupHandler.get_balances_in_group(actor, gid)
+        if not balances:
+            return -1
+        min_item = min(balances.items(), key=lambda item: item[1])
+        return min_item
+        
+
     
     @staticmethod
     def create_group(creator: str, name : str):
@@ -59,7 +98,7 @@ class GroupHandler:
         if not GroupHandler.is_member(actor, group):
             print("User with id " + actor + " is not in the group with id " + gid + ", and cannot add a user to it.")
             return
-        known_users = DataHandler.get_known_users(actor)
+        known_users = DataHandler.get_known_users(actor).keys()
         if not new_member in known_users: 
             print("The user with id " + new_member + " is not known, so it cannot be added to the group.")
             return
@@ -67,13 +106,10 @@ class GroupHandler:
             print("User with id " + new_member + " is already in the group")
             return
 
-
-        if not GroupHandler.is_member(actor, group):
-            print("User with id " + new_member + " is not known by adding user")
-            return
         
-        group["members"][new_member] = group["members"].get(new_member, 0) + 1
+        group.get("members")[new_member] = group["members"].get(new_member, 0) + 1
         DataHandler.write_group(actor, group)
+        print("Added user " + new_member + " to the group " + gid + ".")
 
     @staticmethod
     def leave_group(actor: str, gid: str):
@@ -86,6 +122,13 @@ class GroupHandler:
             print("User with id " + actor + " is not a member of group " + gid)
             return
         
+        user_balance = BalanceHandler.get_balance(actor, actor, gid)
+        if user_balance < 0:
+            print("User " + actor + " has a negative balance of " + user_balance + " and can not leave the group.")
+        
         group["members"][actor] += 1
+        DataHandler.write_group(actor, group)
         updated_group = BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=False)
         DataHandler.write_group(actor, updated_group)
+
+

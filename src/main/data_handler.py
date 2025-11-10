@@ -78,13 +78,15 @@ class DataHandler:
     @staticmethod
     def get_known_users(user_id) -> list[str]:
         user_replica = DataHandler.get_user_replica(user_id)
-        known_users = user_replica["known_users"]
+        known_users = user_replica.get("known_users", {})
         return known_users
     
     @staticmethod
-    def write_known_users(user_id, known_users):
+    def write_known_users(user_id, known_id, known_name):
         user_replica = DataHandler.get_user_replica(user_id)
-        user_replica["known_users"] = known_users
+        known = user_replica.get("known_users", {})
+        known[known_id] = known_name
+        user_replica["known_users"] = known
         DataHandler.write_user_replica(user_id, user_replica)
 
     @staticmethod

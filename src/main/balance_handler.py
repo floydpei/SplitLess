@@ -3,22 +3,31 @@ from data_handler import DataHandler
 class BalanceHandler:
 
     @staticmethod
-    def get_balance(actor: str, gid: str):
+    def get_balance(actor: str, user: str, gid: str):
         replica = DataHandler.get_user_replica(actor)
-        group = replica["groups"].get(gid)
+        if not replica:
+            print("User " + actor + " replica does not exist on local storage.")
+            return -1
+        group = replica.get("groups").get(gid)
         if not group: 
             print("Group " + gid + " does not exist on users " + actor + " replica.")
-            return
+            return -1
+        if group.get("members")[user] and group.get("members")[user] % 2 == 0:
+            print("User " + user + " is not a member in the group" + gid)
+            return -1
         
         expenses = replica["recorded_expenses"]
         group_expenses = [
             e for e in expenses.values() if e["group"] == gid and not e.get("deleted")
         ]
-        pays = sum(expense["amount"] for expense in group_expenses if expense["payer"] == actor)
-        owes = sum(expense["shares"].get(actor, 0.0) for expense in group_expenses)
-        gifts_sent = group["gifts_sent"].get(actor, 0.0)
+        pays = sum(expense["amount"] for expense in group_expenses if expense["payer"] == user)
+        owes = sum(expense["shares"].get(user, 0.0) for expense in group_expenses)
+        gifts_sent = group["gifts_sent"].get(user, 0.0)
+        
+        group_member_cardinality = sum(value % 2 == 1 for value in group.get("members").values())
+        gifts_received = group.get("gifts_received") / group_member_cardinality
 
-        balance = pays - owes - gifts_sent
+        balance = pays - owes - gifts_sent + gifts_received
         return balance
 
 
@@ -39,7 +48,6 @@ class BalanceHandler:
         group_expenses = [
             e for e in expenses.values() if e["group"] == gid and not e.get("deleted")
         ]
-
         for member in members:
             balances[member] = BalanceHandler.compute_balance_group_expenses(member, group, group_expenses)
         
@@ -47,21 +55,16 @@ class BalanceHandler:
     
     @staticmethod
     def compute_gifts(group, balances):
-        #("called")
         gifting_users = [
             user for user, bal in balances.items()
-            if group["members"].get(user, 0) % 2 == 1 and bal > 0
-            #if GroupHandler.is_member(user, group) and bal > 0
+            if group["members"].get(user) % 2 == 0 and bal > 0
         ]
-
         total_gifted = sum(balances[u] for u in gifting_users)
 
         individual_gifts_sent = {
             user: (balances[user] if user in gifting_users else 0.0)
             for user in group["members"].keys()
         }
-
-        # Update the group fields
         group["gifts_received"] = total_gifted
         group["gifts_sent"] = individual_gifts_sent
 
@@ -72,6 +75,8 @@ class BalanceHandler:
     @staticmethod
     def recalculate_gifts(user_id: str, gid: str, write_to_replica: bool):
         replica = DataHandler.get_user_replica(user_id)
+        if not replica:
+            print("User " + user_id + " replica does not exist on local storage.")
         group = replica.get("groups").get(gid)
         expenses = replica.get("recorded_expenses")
         

@@ -46,9 +46,17 @@ class ExpenseHandler:
         amount = sum(shares.values())
         deleted = False
 
+        for share in shares.values():
+            if share < 0:
+                print("The shares of an expense have to be non negative.")
+                return -1
+        if amount == 0:
+            print("The amount of an expense has to be greater than 0.")
+            return -1
+        
         new_expense = Expense(eid, name, group, version, payer, amount, deleted, shares)
         expense_as_dict = asdict(new_expense)
-        print(expense_as_dict)
+        #print(expense_as_dict)
         DataHandler.write_expense(payer, expense_as_dict)
         return eid
 
@@ -57,38 +65,40 @@ class ExpenseHandler:
         expense = DataHandler.get_expense(actor, eid)
         if not expense:
             print("The expense with id " + eid + " does not exist on user " + actor + " replica.")
-            return
+            return -1
         if not actor == expense["payer"]:
             print("The user with id " + actor + " did not pay for the expense and cannot delete it.")
-            return
+            return -1
         if expense["deleted"]:
             print("The expense with id " + eid + " is already deleted.")
-            return
+            return -1
         
         expense["deleted"] = True
+        DataHandler.write_expense(actor, expense)
         if not expense.get("group") == None:
             BalanceHandler.recalculate_gifts(actor, expense.get("group"), write_to_replica=True)
-        DataHandler.write_expense(actor, expense)
+        return 1
 
     @staticmethod
     def add_expense_to_group(actor: str, eid: str, gid: str):
         expense = DataHandler.get_expense(actor, eid)
         group = DataHandler.get_group(actor, gid)
 
-        if not expense:
-            print("The expense with id " + eid + " does not exist on user " + actor + " replica.")
-            return
-        if not expense["group"] == None:
-            print("The expense with id " + eid + " is already in a group.")
-            return
-
         if not group:
             print("The group with id " + gid + " does not exist on user " + actor + " replica.")
-            return
-        
+            return -1
+        if not expense:
+            print("The expense with id " + eid + " does not exist on user " + actor + " replica.")
+            return -1
+        if not GroupHandler.is_member(actor, group):
+            print("The user " + actor + " is not a member of the group " + group + "and cannot add it to this group.")   
+            return -1
         if not actor == expense["payer"]:
             print("The user with id " + actor + " did not pay for the expense and cannot add it to a group.")
-            return
+            return -1
+        if not expense["group"] == None:
+            print("The expense with id " + eid + " is already in a group.")
+            return -1
         
         shares = expense["shares"]
         for user in shares.keys():
@@ -98,24 +108,21 @@ class ExpenseHandler:
         expense["group"] = gid
         expense["version"] += 1
         DataHandler.write_expense(actor, expense)
+        return 1
 
     @staticmethod
     def remove_expense_from_group(actor: str, eid: str):
         expense = DataHandler.get_expense(actor, eid)
+        if not expense:
+            print("The expense with id " + eid + " does not exist on user " + actor + " replica.")
+            return -1
         gid = expense.get("group")
-
         if not gid:
             print("The expense with id " + eid + " is in no group on users " + actor + " replica.")
             return
         
         group = DataHandler.get_group(actor, gid)
 
-        if not expense:
-            print("The expense with id " + eid + " does not exist on user " + actor + " replica.")
-            return
-        if gid== None:
-            print("The expense with id " + eid + " is in no group")
-            return
         if not actor == expense["payer"]:
             print("The user with id " + actor + " did not pay for the expense and cannot add it to a group.")
             return
@@ -128,6 +135,39 @@ class ExpenseHandler:
         DataHandler.write_expense(actor, expense)
         BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
 
-
+    @staticmethod
+    def modify_expense_parameters(actor: str, eid: str, shares):
+        expense = DataHandler.get_expense(actor, eid)
+        if not expense:
+            print("The expense with id " + eid + " does not exist on user " + actor + " replica.")
+            return -1
+        if not actor == expense["payer"]:
+            print("The user with id " + actor + " did not pay for the expense and cannot modify it.")
+            return -1
+        if expense["deleted"]:
+            print("The expense " + eid + " is deleted and can no longer be modified.")
         
+        for share in shares.values():
+            if share < 0:
+                print("The shares of an expense have to be non negative.")
+                return -1
+        amount = sum(shares.values())
+        if amount == 0:
+            print("The amount of an expense has to be greater than 0.")
+            return -1
+        
+        gid = gid = expense.get("group")
+        if gid:
+            group = group = DataHandler.get_group(actor, gid)
+            for user in shares.keys():
+                if not GroupHandler.is_member(user, group):
+                    print("User with id " + user + " has shares in expense " + eid + " and is not in group " + gid + ", so the expense cannot be modified.")
+                    return -1
+        expense["shares"] = shares
+        expense["amount"] = amount
+        DataHandler.write_expense(actor, expense)
+        BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
+            
+        
+
         
