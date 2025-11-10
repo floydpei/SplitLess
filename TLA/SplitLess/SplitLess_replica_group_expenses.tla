@@ -242,6 +242,7 @@ ModifyExpenseParameters ==
         /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
         /\ replicas[rid].recordedExpenses[eid].payer = actor
         /\ SumFunction(shares) > 0
+        /\ ~replicas[rid].recordedExpenses[eid].deleted
         /\ IF replicas[rid].recordedExpenses[eid].group # NO_GROUP
            THEN {u \in USERS : shares[u] > 0}
                 \subseteq {u \in USERS : IsMember(replicas[rid].groups[replicas[rid].recordedExpenses[eid].group].members[u])}
@@ -489,5 +490,5 @@ FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
 
 =============================================================================
 \* Modification History
-\* Last modified Sat Nov 08 12:04:50 CET 2025 by floyd
+\* Last modified Mon Nov 10 11:07:35 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd
