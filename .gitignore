@@ -6,3 +6,4 @@ TLA/*.txt
 TLA/SplitLess/*.toolbox/
 *.DS_Store
 /Notes
+**/__pycache__
