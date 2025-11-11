@@ -5,11 +5,22 @@ from user_manager import UserManager
 from group_handler import GroupHandler, Group
 from expense_handler import ExpenseHandler, Expense
 from balance_handler import BalanceHandler
+from replica_sync import ReplicaSync
+import time
 
 
 class CLIInterface:
     def __init__(self, user_id):
         self.user_id = user_id
+
+        # Automatically start networking when CLI is created
+        print("[ReplicaSync] Starting listener...")
+        ReplicaSync.start_listener(self.user_id)
+        addr = ReplicaSync.address()
+        if addr:
+            print(f"[ReplicaSync] Listening at {addr}")
+        else:
+            print("[ReplicaSync] Failed to start listener.")
 
     def _resolve_entity(self, entity_type: str, name_or_id: str):
         replica = DataHandler.get_user_replica(self.user_id)
@@ -59,11 +70,12 @@ class CLIInterface:
         return None
 
 
-
     def run(self):
         print("Type 'help' to see available commands.\n")
-        while True:
-            try:
+        try:
+            while True:
+                sys.stdout.write("\r\033[K ") #clear current line
+                sys.stdout.flush()              
                 cmd_input = input("splitless> ").strip()
                 if not cmd_input:
                     continue
@@ -97,12 +109,20 @@ class CLIInterface:
                     self.cmd_balance(args)
                 elif cmd == "clear":
                     self.cmd_clear()
+                elif cmd == "sync-address":
+                    self.cmd_sync_address()
+                elif cmd == "sync-send":
+                    self.cmd_sync_send(args)
+                elif cmd == "sync-request":
+                    self.cmd_sync_request(args)
                 else:
                     print("Unknown command. Type 'help' for available commands.")
-            except KeyboardInterrupt:
-                print("\nUse 'exit' or 'quit' to leave.")
-            except Exception as e:
-                print(f"Error: {e}")
+        except KeyboardInterrupt:
+            print("\nUse 'exit' or 'quit' to leave.")
+        finally:
+            # Automatically stop the listener when CLI exits
+            ReplicaSync.stop_listener()
+            print("[ReplicaSync] Listener stopped.")
 
 
     def print_help(self):
@@ -125,8 +145,38 @@ Available commands:
   expense-remove-from-group <expense>
                                     - Remove expense from its group
   balance <group> <user>            - Show your balance with a user in a group
+
+  --- Replica Sync Commands ---
+  sync-start [port]                 - Start listening for replica sync
+  sync-stop                         - Stop the replica sync listener
+  sync-address                      - Show this replica's address
+  sync-send <host> <port>           - Send your full replica to a peer
+  sync-request <host> <port>        - Request a replica from a peer
+
   exit / quit                       - Exit CLI
 """)
+
+
+    def cmd_sync_address(self):
+        addr = ReplicaSync.address()
+        if addr:
+            print(f"[ReplicaSync] Current address: {addr}")
+        else:
+            print("[ReplicaSync] Not running.")
+
+    def cmd_sync_send(self, args):
+        if len(args) != 2:
+            print("Usage: sync-send <host> <port>")
+            return
+        ReplicaSync.send_full_replica(args[0], int(args[1]))
+
+    def cmd_sync_request(self, args):
+        if len(args) != 2:
+            print("Usage: sync-request <host> <port>")
+            return
+        ReplicaSync.request_replica(args[0], int(args[1]))
+
+
 
     def cmd_show(self, args):
         replica = DataHandler.get_user_replica(self.user_id)
@@ -242,4 +292,3 @@ Available commands:
 
     def cmd_clear(self):
         os.system('cls' if os.name == 'nt' else 'clear')
-
