@@ -76,13 +76,14 @@ class BalanceHandler:
     def recalculate_gifts(user_id: str, gid: str, write_to_replica: bool):
         replica = DataHandler.get_user_replica(user_id)
         if not replica:
-            print("User " + user_id + " replica does not exist on local storage.")
+            print("[BalanceHandler] Users " + user_id + " replica does not exist on local storage.")
+            return -1
         group = replica.get("groups").get(gid)
         expenses = replica.get("recorded_expenses")
         
         if not group:
-            print("Group " + gid + " does not exist on user " + user_id + " replica.")
-            return
+            print("[BalanceHandler]  Group " + gid + " does not exist on user " + user_id + " replica.")
+            return -1
         
         balances = BalanceHandler.compute_balances(group, expenses)
         updated_group = BalanceHandler.compute_gifts(group, balances)

@@ -95,7 +95,7 @@ class DataHandler:
 
         # user could be created and working on a different machiene
         if not user_data[user_id]:
-            print("User with id " + user_id + " does not exist or resides at a different location")
+            print("[DataHandler] User with id " + user_id + " does not exist or resides at a different location")
             return
 
         return user_data[user_id]["password_hash"] 

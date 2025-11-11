@@ -7,22 +7,23 @@ from balance_handler import BalanceHandler
 from cli_interface import CLIInterface
 
 def handle_startup():
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("Welcome to SplitLess CLI")
 
     while True:
         print("\nOptions: \n1. Login\n2. Register\n3. Exit")
         choice = input("Choose an option: ").strip()
-        if choice == "1":
+        if choice == "1" or choice == "login" or choice == "Login":
             result = UserManager.login_user()
             if result:
                 username, user_id = result
                 break
-        elif choice == "2":
+        elif choice == "2" or choice == "register" or choice == "Register":
             result = UserManager.create_user()
             if result:
                 username, user_id = result
                 break
-        elif choice == "3":
+        elif choice == "3" or choice == "exit" or choice == "quit":
             print("Exiting...")
             return
         else:
@@ -43,6 +44,5 @@ def handle_startup():
 
 if __name__ == "__main__":
     user_id = handle_startup()
-    print(user_id)
     if user_id:
         CLIInterface(user_id).run()

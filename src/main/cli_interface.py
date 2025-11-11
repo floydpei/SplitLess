@@ -71,10 +71,10 @@ class CLIInterface:
 
 
     def run(self):
-        print("Type 'help' to see available commands.\n")
+        print("\nType 'help' to see available commands.\n")
         try:
             while True:
-                sys.stdout.write("\r\033[K ") #clear current line
+                sys.stdout.write("\r\033[K") #clear current line
                 sys.stdout.flush()              
                 cmd_input = input("splitless> ").strip()
                 if not cmd_input:
@@ -122,8 +122,6 @@ class CLIInterface:
         finally:
             # Automatically stop the listener when CLI exits
             ReplicaSync.stop_listener()
-            print("[ReplicaSync] Listener stopped.")
-
 
     def print_help(self):
         print("""
@@ -155,7 +153,6 @@ Available commands:
 
   exit / quit                       - Exit CLI
 """)
-
 
     def cmd_sync_address(self):
         addr = ReplicaSync.address()

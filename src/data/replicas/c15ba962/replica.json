@@ -6,11 +6,10 @@
       "group": null,
       "version": 5,
       "payer": "c15ba962",
-      "amount": 35.0,
+      "amount": 4.0,
       "deleted": false,
       "shares": {
-        "c15ba962": 23.0,
-        "e42c27ce": 12.0
+        "c15ba962": 4.0
       }
     },
     "31c469f8": {

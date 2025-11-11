@@ -81,6 +81,7 @@ class UserManager:
             print("Incorrect password.")
             return None
 
+        os.system('cls' if os.name == 'nt' else 'clear')
         print(f"Logged in as {username} (id: {user_id})")
 
         return username, user_id

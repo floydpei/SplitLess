@@ -53,11 +53,11 @@ class GroupHandler:
     def get_balances_in_group(actor: str, gid: str):
         replica = DataHandler.get_user_replica(actor)
         if not replica:
-            print("User " + actor + " replica does not exist on local storage.")
+            print("[GROUPHANDLER] User " + actor + " replica does not exist on local storage.")
             return
         group = replica.get("groups").get(gid)
         if not group: 
-            print("Group " + gid + " does not exist on users " + actor + " replica.")
+            print("[GROUPHANDLER] Group " + gid + " does not exist on users " + actor + " replica.")
             return
         
         group_members = GroupHandler.get_members(actor, group)
@@ -87,48 +87,53 @@ class GroupHandler:
         group_as_dict = asdict(new_group)
         #print(group_as_dict)
         DataHandler.write_group(creator, group_as_dict)
+        print("[GroupHandler] Succesfully created a group with id " + gid)
         return gid
 
     @staticmethod
     def add_member(actor: str, new_member: str, gid: str):
         group = DataHandler.get_group(actor, gid)
         if not group:
-            print("Group with " + gid + " does not exist on users " + actor + " replica")
-            return
+            print("[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
+            return -1
         if not GroupHandler.is_member(actor, group):
-            print("User with id " + actor + " is not in the group with id " + gid + ", and cannot add a user to it.")
-            return
+            print("[GroupHandler] User with id " + actor + " is not in the group with id " + gid + ", and cannot add a user to it.")
+            return -1
         known_users = DataHandler.get_known_users(actor).keys()
         if not new_member in known_users: 
-            print("The user with id " + new_member + " is not known, so it cannot be added to the group.")
-            return
+            print("[GroupHandler] The user with id " + new_member + " is not known, so it cannot be added to the group.")
+            return -1
         if GroupHandler.is_member(new_member, group):
-            print("User with id " + new_member + " is already in the group")
-            return
+            print("[GroupHandler] User with id " + new_member + " is already in the group")
+            return -1
 
         
         group.get("members")[new_member] = group["members"].get(new_member, 0) + 1
         DataHandler.write_group(actor, group)
-        print("Added user " + new_member + " to the group " + gid + ".")
+        print("[GROUPHAGroupHandlerNDLER] Succesfully added user " + new_member + " to the group " + gid + ".")
+        return 1
 
     @staticmethod
     def leave_group(actor: str, gid: str):
         group = DataHandler.get_group(actor, gid)
         if not group:
-            print("Group with " + gid + " does not exist on users " + actor + " replica")
-            return
+            print("[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
+            return -1
         
         if not GroupHandler.is_member(actor, group):
-            print("User with id " + actor + " is not a member of group " + gid)
-            return
+            print("[GroupHandler] User with id " + actor + " is not a member of group " + gid)
+            return -1
         
         user_balance = BalanceHandler.get_balance(actor, actor, gid)
         if user_balance < 0:
-            print("User " + actor + " has a negative balance of " + user_balance + " and can not leave the group.")
+            print("[GroupHandler] User " + actor + " has a negative balance of " + user_balance + " and can not leave the group.")
+            return -1
         
         group["members"][actor] += 1
         DataHandler.write_group(actor, group)
         updated_group = BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=False)
         DataHandler.write_group(actor, updated_group)
+        print("[GroupHandler] User" + actor + " left the group " + gid + ".")
+        return 1
 
 

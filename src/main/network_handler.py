@@ -46,7 +46,7 @@ class UDPNetworkHandler:
         self.socket.bind((self.host, self.port))
         self.port = self.socket.getsockname()[1]
         self.running = True
-        self.safe_print(f"[UDP] Listening on {self.host}:{self.port}")
+        #self.safe_print(f"[UDP] Listening on {self.host}:{self.port}")
         threading.Thread(target=self.listen_loop, daemon=True).start()
 
     def listen_loop(self):
@@ -75,7 +75,7 @@ class UDPNetworkHandler:
     def stop(self):
         self.running = False
         self.socket.close()
-        self.safe_print("[UDP] Listener stopped.")
+        #self.safe_print("[UDP] Listener stopped.")
 
     def safe_print(*args, **kwargs):
         with print_lock:
