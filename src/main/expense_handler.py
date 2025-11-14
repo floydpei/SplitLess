@@ -74,6 +74,13 @@ class ExpenseHandler:
             print("[ExpenseHandler] The expense with id " + eid + " is already deleted.")
             return -1
         
+        gid = expense.get("group")
+        if gid:
+            group = group = DataHandler.get_group(actor, gid)
+            if not GroupHandler.is_member(actor, group):
+                print("[ExpenseHandler] User " + actor + " is not member of the group " + gid + " and cannot delete the expense " + eid)
+                return -1
+        
         expense["deleted"] = True
         DataHandler.write_expense(actor, expense)
         if not expense.get("group") == None:
@@ -161,9 +168,12 @@ class ExpenseHandler:
             print("[ExpenseHandler] The amount of an expense has to be greater than 0.")
             return -1
         
-        gid = gid = expense.get("group")
+        gid = expense.get("group")
         if gid:
             group = group = DataHandler.get_group(actor, gid)
+            if not GroupHandler.is_member(actor, group):
+                print("[ExpenseHandler] User " + actor + " is not member of the group " + gid)
+                return -1
             for user in shares.keys():
                 if not GroupHandler.is_member(user, group):
                     print("[ExpenseHandler] User with id " + user + " has shares in expense " + eid + " and is not in group " + gid + ", so the expense cannot be modified.")

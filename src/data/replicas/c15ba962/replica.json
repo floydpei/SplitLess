@@ -24,6 +24,19 @@
         "c15ba962": 17.0,
         "e42c27ce": 3
       }
+    },
+    "6474bfb5": {
+      "eid": "6474bfb5",
+      "name": "migros-foo",
+      "group": "65ee8cc8",
+      "version": 1,
+      "payer": "c15ba962",
+      "amount": 4.0,
+      "deleted": false,
+      "shares": {
+        "c15ba962": 1.0,
+        "e42c27ce": 3.0
+      }
     }
   },
   "groups": {
@@ -33,6 +46,19 @@
       "gifts_received": 0,
       "members": {
         "c15ba962": 1,
+        "e42c27ce": 1
+      },
+      "gifts_sent": {
+        "c15ba962": 0.0,
+        "e42c27ce": 0.0
+      }
+    },
+    "65ee8cc8": {
+      "gid": "65ee8cc8",
+      "name": "foo",
+      "gifts_received": 0,
+      "members": {
+        "c15ba962": 2,
         "e42c27ce": 1
       },
       "gifts_sent": {
