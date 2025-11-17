@@ -1,17 +1,5 @@
 {
   "recorded_expenses": {
-    "cf2a35e8": {
-      "eid": "cf2a35e8",
-      "name": "hallo1",
-      "group": null,
-      "version": 5,
-      "payer": "c15ba962",
-      "amount": 4.0,
-      "deleted": false,
-      "shares": {
-        "c15ba962": 4.0
-      }
-    },
     "31c469f8": {
       "eid": "31c469f8",
       "name": "hallo2",
@@ -37,6 +25,18 @@
         "c15ba962": 1.0,
         "e42c27ce": 3.0
       }
+    },
+    "cf2a35e8": {
+      "eid": "cf2a35e8",
+      "name": "hallo1",
+      "group": null,
+      "version": 5,
+      "payer": "c15ba962",
+      "amount": 4.0,
+      "deleted": false,
+      "shares": {
+        "c15ba962": 4.0
+      }
     }
   },
   "groups": {
@@ -56,13 +56,13 @@
     "65ee8cc8": {
       "gid": "65ee8cc8",
       "name": "foo",
-      "gifts_received": 0,
+      "gifts_received": 3.0,
       "members": {
         "c15ba962": 2,
         "e42c27ce": 1
       },
       "gifts_sent": {
-        "c15ba962": 0.0,
+        "c15ba962": 3.0,
         "e42c27ce": 0.0
       }
     }

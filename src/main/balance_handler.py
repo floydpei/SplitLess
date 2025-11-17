@@ -7,14 +7,14 @@ class BalanceHandler:
         replica = DataHandler.get_user_replica(actor)
         if not replica:
             print("User " + actor + " replica does not exist on local storage.")
-            return -1
+            return None
         group = replica.get("groups").get(gid)
         if not group: 
             print("Group " + gid + " does not exist on users " + actor + " replica.")
-            return -1
+            return None
         if group.get("members")[user] and group.get("members")[user] % 2 == 0:
-            print("User " + user + " is not a member in the group" + gid)
-            return -1
+            print("User " + user + " is not a member in the group " + gid)
+            return None
         
         expenses = replica["recorded_expenses"]
         group_expenses = [

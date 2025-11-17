@@ -1,6 +1,7 @@
 import json
 from network_handler import UDPNetworkHandler, NetworkMessage, MessageType
 from data_handler import DataHandler
+from balance_handler import BalanceHandler
 import sys, threading
 
 print_lock = threading.Lock()
@@ -54,16 +55,147 @@ class ReplicaSync:
 
     @staticmethod
     def _handle_replica_update(msg: NetworkMessage, addr):
-        """Handle an incoming full replica update."""
         payload = msg.payload
         replica_data = payload.get("replica_data")
         sender = payload.get("sender_id")
 
         if not replica_data or not sender:
             ReplicaSync.safe_print("[ReplicaSync] Invalid REPLICA_UPDATE message.")
-            return
+            return -1
 
-        # Later call DataHandler.merge_replica(replica_data)
+        ReplicaSync.safe_print("[ReplicaSync] Merging replicas...")
+        ReplicaSync._merge_replica(other_replica=replica_data)
+        ReplicaSync.safe_print("[ReplicaSync] Finished merging replicas.")
+
+
+    @staticmethod
+    def _merge_replica(other_replica):
+        own_replica = DataHandler.get_user_replica(ReplicaSync.user_id)
+        own_expenses = own_replica.get("recorded_expenses")
+        own_groups = own_replica.get("groups")
+        own_users = own_replica.get("known_users")
+
+        other_expenses = other_replica.get("recorded_expenses")
+        other_groups = other_replica.get("groups")
+        other_users = other_replica.get("known_users")
+
+        merged_expenses = ReplicaSync._merge_expenses(own_expenses=own_expenses, other_expenses=other_expenses)
+        merged_groups = ReplicaSync._merge_groups(own_groups=own_groups, other_groups=other_groups)
+        merged_users = ReplicaSync._merge_known_users(own_users=own_users, other_users=other_users)
+
+        #print("merged expenses: ")
+        #print(merged_expenses)
+        #print("merged groups: ")
+        #print(merged_groups)
+        #print("merged users: ")
+        #print(merged_users)
+
+        merged_replica = {
+            **own_replica,
+            "recorded_expenses": merged_expenses,
+            "groups": merged_groups,
+            "known_users": merged_users
+        }
+
+        DataHandler.write_user_replica(ReplicaSync.user_id, merged_replica)
+        for gid in set(merged_replica.get("groups").keys()):
+            BalanceHandler.recalculate_gifts(ReplicaSync.user_id, gid=gid, write_to_replica=True)
+        return 0
+
+
+
+    @staticmethod
+    def _merge_expenses(own_expenses, other_expenses):
+        if not own_expenses: 
+            return other_expenses or {}
+        if not other_expenses:
+            return own_expenses or {}
+        
+        merged_expenses = {}
+        all_eids = set(own_expenses.keys()) | set(other_expenses.keys())
+
+        for eid in all_eids:
+            exp_own = own_expenses.get(eid)
+            exp_other = other_expenses.get(eid)
+
+            if exp_own and not exp_other:
+                merged_expenses[eid] = exp_own
+                continue
+            if not exp_own and exp_other:
+                merged_expenses[eid] = exp_other
+                continue
+            
+            own_version = exp_own.get("version", 0)
+            other_version = exp_other.get("version", 0)
+        
+            if own_version >= other_version:
+                merged_expenses[eid] = exp_own
+            else:
+                merged_expenses[eid] = exp_other
+        
+        return merged_expenses
+
+    @staticmethod
+    def _merge_groups(own_groups, other_groups):
+        if not own_groups:
+            return other_groups or {}
+        if not other_groups:
+            return own_groups or {}
+        
+        merged_groups = {}
+        all_gids = set(own_groups.keys()) | set(other_groups.keys())
+
+        for gid in all_gids:
+            group_own = own_groups.get(gid)
+            group_other = other_groups.get(gid)
+
+            if group_own and not group_other:
+                merged_groups[gid] = group_own
+                continue
+            if group_other and not group_own:
+                merged_groups[gid] = group_other
+                continue
+
+            own_members = group_own.get("members")
+            other_members = group_other.get("members")
+            merged_members = {}
+            all_uids = set(own_members.keys()) | set(other_members.keys())
+
+            for uid in all_uids:
+                merged_members[uid] = max(own_members.get(uid, 0), other_members.get(uid, 0))
+
+            merged_group = {
+                **group_own,
+                "members": merged_members
+            }
+            merged_groups[gid] = merged_group
+
+        return merged_groups
+    
+    @staticmethod
+    def _merge_known_users(own_users, other_users):
+        if not own_users:
+            return other_users or {}
+        if not other_users:
+            return own_users or {}
+
+        merged_users = {}
+        all_uids = set(own_users.keys()) | set(other_users.keys())
+
+        for uid in all_uids:
+            own_name = own_users.get(uid)
+            other_name = other_users.get(uid)
+
+            if own_name and not other_name:
+                merged_users[uid] = own_name
+            elif other_name and not own_name:
+                merged_users[uid] = other_name
+            else:
+                # Conflict: choose lexicographically larger name, should not be possible to occur
+                merged_users[uid] = max(own_name, other_name)
+
+        return merged_users
+
 
     @staticmethod
     def _handle_replica_request(addr):

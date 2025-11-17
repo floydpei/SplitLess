@@ -56,15 +56,21 @@ class UDPNetworkHandler:
                 data, addr = self.socket.recvfrom(8192)
                 msg = NetworkMessage.from_json(data.decode())
                 if self.on_message:
-                    self.on_message(msg, addr)
+                    try:
+                        self.on_message(msg, addr)
+                    except Exception as e:
+                        if self.running:
+                            self.safe_print(f"[UDP] Error handeling message {msg.type.name}: {e}")
+                            
                 else:
-                    self.safe_print(f"[UDP] Received {msg.type.name} from {addr}: {msg.payload}")
+                    self.safe_print(f"[UDP] Received {msg.type.name} from {addr}")#: {msg.payload}")
             except Exception as e:
                 if self.running:
                     self.safe_print(f"[UDP] Error receiving message: {e}")
 
     def send_message(self, msg: NetworkMessage, target_host: str, target_port: int):
         try:
+            #self.safe_print("Send message of type: " + msg.type.name)
             self.socket.sendto(msg.to_json().encode(), (target_host, target_port))
         except Exception as e:
             self.safe_print(f"[UDP] Failed to send message: {e}")

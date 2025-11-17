@@ -82,6 +82,7 @@ class ExpenseHandler:
                 return -1
         
         expense["deleted"] = True
+        expense["version"] += 1
         DataHandler.write_expense(actor, expense)
         if not expense.get("group") == None:
             BalanceHandler.recalculate_gifts(actor, expense.get("group"), write_to_replica=True)
@@ -180,6 +181,7 @@ class ExpenseHandler:
                     return -1
         expense["shares"] = shares
         expense["amount"] = amount
+        expense["version"] += 1
         DataHandler.write_expense(actor, expense)
         if gid:
             BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)

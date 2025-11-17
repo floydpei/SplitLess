@@ -216,6 +216,7 @@ Available commands:
         if gid:
             GroupHandler.leave_group(self.user_id, gid)
 
+
     def cmd_expense_create(self, args):
         if len(args) < 2:
             print("Usage: expense-create <name> <user>:<share> ...")
@@ -283,7 +284,7 @@ Available commands:
         uid = self._resolve_entity("user", args[1])
         if gid and uid:
             balance = BalanceHandler.get_balance(self.user_id, uid, gid)
-            if balance == -1:
+            if balance == None:
                 return
             print(f"Balance of user {args[1]} (id: {uid}) in group {args[0]} (id: {gid}): {balance}")
 
