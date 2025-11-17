@@ -57,7 +57,7 @@ class BalanceHandler:
     def compute_gifts(group, balances):
         gifting_users = [
             user for user, bal in balances.items()
-            if group["members"].get(user) % 2 == 0 and bal > 0
+            if group.get("members").get(user) % 2 == 0 and group.get("members").get(user) > 0 and bal > 0
         ]
         total_gifted = sum(balances[u] for u in gifting_users)
 

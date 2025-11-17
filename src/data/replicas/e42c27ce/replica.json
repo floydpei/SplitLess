@@ -1,68 +1,42 @@
 {
   "recorded_expenses": {
-    "6474bfb5": {
-      "eid": "6474bfb5",
+    "e4aaf74f": {
+      "eid": "e4aaf74f",
+      "name": "rewe-foo",
+      "group": "3eb5e5ae",
+      "version": 2,
+      "payer": "e42c27ce",
+      "amount": 35.0,
+      "deleted": false,
+      "shares": {
+        "e42c27ce": 35.0
+      }
+    },
+    "03898041": {
+      "eid": "03898041",
       "name": "migros-foo",
-      "group": "65ee8cc8",
+      "group": "3eb5e5ae",
       "version": 1,
       "payer": "c15ba962",
-      "amount": 4.0,
+      "amount": 27.0,
       "deleted": false,
       "shares": {
-        "c15ba962": 1.0,
-        "e42c27ce": 3.0
-      }
-    },
-    "31c469f8": {
-      "eid": "31c469f8",
-      "name": "hallo2",
-      "group": "b6d388a1",
-      "version": 2,
-      "payer": "c15ba962",
-      "amount": 20.0,
-      "deleted": false,
-      "shares": {
-        "c15ba962": 17.0,
-        "e42c27ce": 3
-      }
-    },
-    "cf2a35e8": {
-      "eid": "cf2a35e8",
-      "name": "hallo1",
-      "group": null,
-      "version": 5,
-      "payer": "c15ba962",
-      "amount": 4.0,
-      "deleted": false,
-      "shares": {
-        "c15ba962": 4.0
+        "c15ba962": 3.0,
+        "e42c27ce": 24.0
       }
     }
   },
   "groups": {
-    "b6d388a1": {
-      "gid": "b6d388a1",
-      "name": "hallo",
+    "3eb5e5ae": {
+      "gid": "3eb5e5ae",
+      "name": "foo",
       "gifts_received": 0,
       "members": {
-        "c15ba962": 1,
-        "e42c27ce": 1
+        "c15ba962": 5,
+        "e42c27ce": 3
       },
       "gifts_sent": {
         "c15ba962": 0.0,
-        "e42c27ce": 0.0
-      }
-    },
-    "65ee8cc8": {
-      "gid": "65ee8cc8",
-      "name": "foo",
-      "gifts_received": 3.0,
-      "members": {
-        "c15ba962": 3,
-        "e42c27ce": 1
-      },
-      "gifts_sent": {
-        "c15ba962": 3.0,
         "e42c27ce": 0.0
       }
     }
