@@ -53,11 +53,11 @@ class GroupHandler:
     def get_balances_in_group(actor: str, gid: str):
         replica = DataHandler.get_user_replica(actor)
         if not replica:
-            print("[GROUPHANDLER] User " + actor + " replica does not exist on local storage.")
+            print("[GroupHandler] User " + actor + " replica does not exist on local storage.")
             return
         group = replica.get("groups").get(gid)
         if not group: 
-            print("[GROUPHANDLER] Group " + gid + " does not exist on users " + actor + " replica.")
+            print("[GroupHandler] Group " + gid + " does not exist on users " + actor + " replica.")
             return
         
         group_members = GroupHandler.get_members(actor, group)
@@ -110,7 +110,7 @@ class GroupHandler:
         
         group.get("members")[new_member] = group["members"].get(new_member, 0) + 1
         DataHandler.write_group(actor, group)
-        print("[GROUPHAGroupHandlerNDLER] Succesfully added user " + new_member + " to the group " + gid + ".")
+        print("[GroupHandler] Succesfully added user " + new_member + " to the group " + gid + ".")
         return 1
 
     @staticmethod

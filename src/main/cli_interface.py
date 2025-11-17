@@ -95,6 +95,8 @@ class CLIInterface:
                     self.cmd_group_add_member(args)
                 elif cmd == "group-leave":
                     self.cmd_group_leave(args)
+                elif cmd == "group-suggest-payer":
+                    self.cmd_group_suggest_payer(args)
                 elif cmd == "expense-create":
                     self.cmd_expense_create(args)
                 elif cmd == "expense-delete":
@@ -105,8 +107,8 @@ class CLIInterface:
                     self.cmd_expense_add_to_group(args)
                 elif cmd == "expense-remove-from-group":
                     self.cmd_expense_remove_from_group(args)
-                elif cmd == "balance":
-                    self.cmd_balance(args)
+                elif cmd == "group-balance":
+                    self.cmd_group_balance(args)
                 elif cmd == "clear":
                     self.cmd_clear()
                 elif cmd == "sync-address":
@@ -133,6 +135,9 @@ Available commands:
   group-create <name>               - Create a new group
   group-add-member <group> <user>   - Add user to group (name or id)
   group-leave <group>               - Leave a group
+  group-suggest-payer <group>       - Suggest the next payer (lowest balance)
+  group-balance <group> <user>      - Show your balance with a user in a group
+
   expense-create <name> <payer_share>:<amount> [<other_share>:<amount> ...]
                                     - Create a new expense
   expense-delete <expense>          - Delete an expense
@@ -142,7 +147,6 @@ Available commands:
                                     - Add expense to a group
   expense-remove-from-group <expense>
                                     - Remove expense from its group
-  balance <group> <user>            - Show your balance with a user in a group
 
   --- Replica Sync Commands ---
   sync-start [port]                 - Start listening for replica sync
@@ -216,6 +220,28 @@ Available commands:
         if gid:
             GroupHandler.leave_group(self.user_id, gid)
 
+    def cmd_group_suggest_payer(self, args):
+        if len(args) < 1:
+            print("Usage: suggest-payer <group>")
+            return
+
+        gid = self._resolve_entity("group", args[0])
+        if not gid:
+            print("Group " + gid + " does not exist.")
+            return
+
+        result = GroupHandler.get_lowest_balance_in_group(self.user_id, gid)
+        if not result:
+            print("Could not calculate balance or group is empty.")
+            return
+
+        uid, bal = result
+        replica = DataHandler.get_user_replica(self.user_id)
+        name = replica.get("known_users", {}).get(uid, uid)
+
+        print(f"Suggested next payer: {name} (id: {uid}) with current balance {bal}")
+
+
 
     def cmd_expense_create(self, args):
         if len(args) < 2:
@@ -276,7 +302,7 @@ Available commands:
         if eid:
             ExpenseHandler.remove_expense_from_group(self.user_id, eid)
 
-    def cmd_balance(self, args):
+    def cmd_group_balance(self, args):
         if len(args) < 2:
             print("Usage: balance <group> <user>")
             return
