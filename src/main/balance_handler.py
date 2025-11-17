@@ -11,8 +11,9 @@ class BalanceHandler:
         group = replica.get("groups").get(gid)
         if not group: 
             print("Group " + gid + " does not exist on users " + actor + " replica.")
-            return None
-        if group.get("members")[user] and group.get("members")[user] % 2 == 0:
+            return 
+        group_members = group.get("members")
+        if group_members[user] and group_members[user] % 2 == 0:
             print("User " + user + " is not a member in the group " + gid)
             return None
         
@@ -24,7 +25,13 @@ class BalanceHandler:
         owes = sum(expense["shares"].get(user, 0.0) for expense in group_expenses)
         gifts_sent = group["gifts_sent"].get(user, 0.0)
         
-        group_member_cardinality = sum(value % 2 == 1 for value in group.get("members").values())
+        group_member_cardinality = sum(value % 2 == 1 for value in group_members.values())
+        #for member in group_members:
+         #   if group_members[member] % 2 == 1 and group_members[member] > 1:
+          #      group_member_cardinality -= 1
+
+
+        #gifts_received = (group.get("gifts_received") - gifts_sent ) / group_member_cardinality
         gifts_received = group.get("gifts_received") / group_member_cardinality
 
         balance = pays - owes - gifts_sent + gifts_received
@@ -32,7 +39,7 @@ class BalanceHandler:
 
 
     @staticmethod
-    def compute_balance_group_expenses(user, group, group_expenses):
+    def compute_balance_group_expenses(user, group_expenses):
         pays = sum(expense["amount"] for expense in group_expenses if expense["payer"] == user)
         owes = sum(expense["shares"].get(user, 0.0) for expense in group_expenses)
 
@@ -49,7 +56,7 @@ class BalanceHandler:
             e for e in expenses.values() if e["group"] == gid and not e.get("deleted")
         ]
         for member in members:
-            balances[member] = BalanceHandler.compute_balance_group_expenses(member, group, group_expenses)
+            balances[member] = BalanceHandler.compute_balance_group_expenses(member, group_expenses)
         
         return balances
     

@@ -12,6 +12,20 @@
         "c15ba962": 4.0
       }
     },
+    "15eb2f91": {
+      "eid": "15eb2f91",
+      "name": "rewe-foo",
+      "group": "65ee8cc8",
+      "version": 1,
+      "payer": "46962ee1",
+      "amount": 24.0,
+      "deleted": false,
+      "shares": {
+        "46962ee1": 12.0,
+        "c15ba962": 5.0,
+        "e42c27ce": 7.0
+      }
+    },
     "31c469f8": {
       "eid": "31c469f8",
       "name": "hallo2",
@@ -43,22 +57,35 @@
     "65ee8cc8": {
       "gid": "65ee8cc8",
       "name": "foo",
-      "gifts_received": 0.0,
+      "gifts_received": 3,
       "members": {
-        "c15ba962": 5,
+        "e42c27ce": 1,
         "46962ee1": 1,
-        "e42c27ce": 1
+        "c15ba962": 5
       },
       "gifts_sent": {
-        "c15ba962": 0.0,
-        "46962ee1": 0,
-        "e42c27ce": 0.0
+        "e42c27ce": 0.0,
+        "46962ee1": 0.0,
+        "c15ba962": 3.0
+      }
+    },
+    "b6d388a1": {
+      "gid": "b6d388a1",
+      "name": "hallo",
+      "gifts_received": 0,
+      "members": {
+        "e42c27ce": 1,
+        "c15ba962": 1
+      },
+      "gifts_sent": {
+        "e42c27ce": 0.0,
+        "c15ba962": 0.0
       }
     }
   },
   "known_users": {
-    "c15ba962": "alice",
+    "e42c27ce": "bob",
     "46962ee1": "charlie",
-    "e42c27ce": "bob"
+    "c15ba962": "alice"
   }
 }

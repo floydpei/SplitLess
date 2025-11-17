@@ -98,8 +98,8 @@ class ReplicaSync:
         }
 
         DataHandler.write_user_replica(ReplicaSync.user_id, merged_replica)
-        for gid in set(merged_replica.get("groups").keys()):
-            BalanceHandler.recalculate_gifts(ReplicaSync.user_id, gid=gid, write_to_replica=True)
+        #for gid in set(merged_replica.get("groups").keys()):
+         #   BalanceHandler.recalculate_gifts(ReplicaSync.user_id, gid=gid, write_to_replica=True)
         return 0
 
 
@@ -158,15 +158,26 @@ class ReplicaSync:
 
             own_members = group_own.get("members")
             other_members = group_other.get("members")
+            own_gifts_sent = group_own.get("gifts_sent")
+            print(own_gifts_sent)
+            other_gifts_sent = group_other.get("gifts_sent")
             merged_members = {}
+            merged_gifts_sent = {}
             all_uids = set(own_members.keys()) | set(other_members.keys())
 
             for uid in all_uids:
                 merged_members[uid] = max(own_members.get(uid, 0), other_members.get(uid, 0))
+                merged_gifts_sent[uid] = max(own_gifts_sent.get(uid, 0), other_gifts_sent.get(uid, 0))
+            #print("merged_membrs")
+            #print(merged_members)
+            print("merged_gifts_sent")
+            print(merged_gifts_sent)
 
             merged_group = {
                 **group_own,
-                "members": merged_members
+                "members": merged_members,
+                "gifts_sent": merged_gifts_sent,
+                "gifts_received": sum(merged_gifts_sent.values())
             }
             merged_groups[gid] = merged_group
 
