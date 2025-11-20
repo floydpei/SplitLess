@@ -96,7 +96,7 @@ ComputeBalances(grp, recordedExpensesIn) ==
 
 ComputeGifts(grp, balances) ==
       LET giftingUsers ==
-            { u \in USERS : IsMember(grp.members[u]) /\ balances[u] > 0 }
+            { u \in USERS : ~IsMember(grp.members[u]) /\ balances[u] > 0 }
           newTotalGifted == SumFunction([u \in giftingUsers |-> balances[u]])
           newIndividualGifts == [u \in USERS |-> IF u \in giftingUsers THEN balances[u] ELSE 0]
       IN [ grp EXCEPT !.totalGifted = newTotalGifted,
@@ -189,8 +189,8 @@ CreateExpense ==
              newReplica ==
                [ replicas[rid] EXCEPT !.recordedExpenses = [@ EXCEPT ![eid] = newExpense] ]
            IN /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
-              \*/\ actionCounter' = actionCounter + 1
-              /\ UNCHANGED<<actionCounter>>
+              /\ actionCounter' = actionCounter + 1
+              \*/\ UNCHANGED<<actionCounter>>
 
 AddExpenseToGroup ==
       \E actor \in USERS :
@@ -490,5 +490,5 @@ FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
 
 =============================================================================
 \* Modification History
-\* Last modified Mon Nov 10 11:07:35 CET 2025 by floyd
+\* Last modified Thu Nov 20 12:46:45 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd
