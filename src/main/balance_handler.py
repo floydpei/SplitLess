@@ -12,8 +12,9 @@ class BalanceHandler:
         if not group: 
             print("Group " + gid + " does not exist on users " + actor + " replica.")
             return None
-        if group.get("members")[user] and group.get("members")[user] % 2 == 0:
-            print("User " + user + " is not a member in the group " + gid)
+        if not group.get("members")[user]: #and group.get("members")[user] % 2 == 0:
+            #print("User " + user + " is not a member in the group " + gid)
+            #print("User " + user + " was never a member of the group " + gid)
             return None
         
         expenses = replica["recorded_expenses"]
@@ -25,9 +26,15 @@ class BalanceHandler:
         gifts_sent = group["gifts_sent"].get(user, 0.0)
         
         group_member_cardinality = sum(value % 2 == 1 for value in group.get("members").values())
-        gifts_received = group.get("gifts_received") / group_member_cardinality
 
-        balance = pays - owes - gifts_sent + gifts_received
+        balance = pays - owes - gifts_sent
+        if not group_member_cardinality == 0:
+            gifts_received = group.get("gifts_received") / group_member_cardinality
+            balance += gifts_received
+        else :
+            print("There is no user left in the group. The total amount gifted to the group is " + str(group.get("gifts_received")) + ".")
+
+        #balance = pays - owes - gifts_sent + gifts_received
         return balance
 
 

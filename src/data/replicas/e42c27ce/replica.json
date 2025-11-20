@@ -1,43 +1,54 @@
 {
   "recorded_expenses": {
-    "e4aaf74f": {
-      "eid": "e4aaf74f",
+    "f14a73f9": {
+      "eid": "f14a73f9",
       "name": "rewe-foo",
-      "group": "3eb5e5ae",
-      "version": 2,
+      "group": "83b78fdb",
+      "version": 1,
       "payer": "e42c27ce",
-      "amount": 35.0,
+      "amount": 4.0,
       "deleted": false,
       "shares": {
-        "e42c27ce": 35.0
+        "c15ba962": 4.0
       }
     },
-    "03898041": {
-      "eid": "03898041",
-      "name": "migros-foo",
-      "group": "3eb5e5ae",
+    "253db469": {
+      "eid": "253db469",
+      "name": "lidl-foo",
+      "group": "83b78fdb",
       "version": 1,
-      "payer": "c15ba962",
+      "payer": "e42c27ce",
       "amount": 27.0,
       "deleted": false,
       "shares": {
-        "c15ba962": 3.0,
-        "e42c27ce": 24.0
+        "c15ba962": 27.0
+      }
+    },
+    "795f1031": {
+      "eid": "795f1031",
+      "name": "migros-foo",
+      "group": "83b78fdb",
+      "version": 1,
+      "payer": "c15ba962",
+      "amount": 13.0,
+      "deleted": false,
+      "shares": {
+        "e42c27ce": 13.0
       }
     }
   },
   "groups": {
-    "3eb5e5ae": {
-      "gid": "3eb5e5ae",
+    "83b78fdb": {
+      "gid": "83b78fdb",
       "name": "foo",
-      "gifts_received": 0,
+      "gifts_received": 18.0,
       "members": {
-        "c15ba962": 5,
-        "e42c27ce": 3
+        "c15ba962": 6,
+        "e42c27ce": 2
       },
       "gifts_sent": {
         "c15ba962": 0.0,
-        "e42c27ce": 0.0
+        "e42c27ce": 18.0
       }
     }
   },
