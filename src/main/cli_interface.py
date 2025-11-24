@@ -92,7 +92,14 @@ class CLIInterface:
                 elif cmd == "group-create":
                     self.cmd_group_create(args)
                 elif cmd == "group-add-member":
-                    self.cmd_group_add_member(args)
+                    print("Command unavailable")
+                    # self.cmd_group_add_member(args)
+                elif cmd == "group-invite":
+                    self.cmd_group_invite(args)
+                elif cmd == "group-accept":
+                    self.cmd_group_accept(args)
+                elif cmd == "group-invitations":
+                    self.cmd_group_invitations()
                 elif cmd == "group-leave":
                     self.cmd_group_leave(args)
                 elif cmd == "group-suggest-payer":
@@ -134,6 +141,10 @@ Available commands:
   show users                        - Show all known users
   group-create <name>               - Create a new group
   group-add-member <group> <user>   - Add user to group (name or id)
+  group-invite <group> <user>       - Invite a user into a group
+  group-accept <group>              - Accept an invitation
+  group-invitations                 - List your open invitations
+
   group-leave <group>               - Leave a group
   group-suggest-payer <group>       - Suggest the next payer (lowest balance)
   group-balance <group> <user>      - Show your balance with a user in a group
@@ -211,6 +222,33 @@ Available commands:
         uid = self._resolve_entity("user", args[1])
         if gid and uid:
             GroupHandler.add_member(self.user_id, uid, gid)
+
+    def cmd_group_invite(self, args):
+        if len(args) < 2:
+            print("Usage: group-invite <group> <user>")
+            return
+        gid = self._resolve_entity("group", args[0])
+        uid = self._resolve_entity("user", args[1])
+        if gid and uid:
+            GroupHandler.invite_member(self.user_id, uid, gid)
+
+    def cmd_group_accept(self, args):
+        if len(args) < 1:
+            print("Usage: group-accept <group>")
+            return
+        gid = self._resolve_entity("group", args[0])
+        if gid:
+            GroupHandler.accept_invitation(self.user_id, gid)
+
+    def cmd_group_invitations(self):
+        replica = DataHandler.get_user_replica(self.user_id)
+        groups = replica.get("groups", {})
+        print("Pending invitations:")
+        for gid, g in groups.items():
+            persumed = g.get("persumed_members", {})
+            if persumed.get(self.user_id, 0) % 2 == 1:  # contender
+                print(f"  - {g['name']} (id: {gid})")
+
 
     def cmd_group_leave(self, args):
         if len(args) < 1:

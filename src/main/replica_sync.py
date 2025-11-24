@@ -164,9 +164,18 @@ class ReplicaSync:
             for uid in all_uids:
                 merged_members[uid] = max(own_members.get(uid, 0), other_members.get(uid, 0))
 
+            own_persumed_members = group_own.get("persumed_members")
+            other_persumed_members = group_other.get("persumed_members")
+            merged_persumed_members = {}
+            all_uids = set(own_persumed_members.keys()) | set(other_persumed_members.keys())
+
+            for uid in all_uids:
+                merged_persumed_members[uid] = max(own_persumed_members.get(uid, 0), other_persumed_members.get(uid, 0))
+
             merged_group = {
                 **group_own,
-                "members": merged_members
+                "members": merged_members,
+                "persumed_members": merged_persumed_members
             }
             merged_groups[gid] = merged_group
 
