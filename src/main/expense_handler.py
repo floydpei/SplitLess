@@ -101,7 +101,7 @@ class ExpenseHandler:
             print("[ExpenseHandler] The expense with id " + eid + " does not exist on user " + actor + " replica.")
             return -1
         if not GroupHandler.is_member(actor, group):
-            print("[ExpenseHandler] The user " + actor + " is not a member of the group " + group + "and cannot add it to this group.")   
+            print("[ExpenseHandler] The user " + actor + " is not a member of the group " + gid + "and cannot add it to this group.")   
             return -1
         if not actor == expense["payer"]:
             print("[ExpenseHandler] The user with id " + actor + " did not pay for the expense and cannot add it to a group.")
@@ -114,6 +114,7 @@ class ExpenseHandler:
         for user in shares.keys():
             if not GroupHandler.is_member(user, group):
                 print("[ExpenseHandler] User with id " + user + " has shares in expense " + eid + " and is not in group " + gid + ", so the expense cannot be added to this goup.")
+                return -1
         
         expense["group"] = gid
         expense["version"] += 1

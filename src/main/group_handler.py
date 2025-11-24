@@ -110,6 +110,8 @@ class GroupHandler:
         
         group.get("members")[new_member] = group["members"].get(new_member, 0) + 1
         DataHandler.write_group(actor, group)
+        if group.get("members")[new_member] > 1:
+            BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
         print("[GroupHandler] Succesfully added user " + new_member + " to the group " + gid + ".")
         return 1
 
