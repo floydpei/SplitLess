@@ -6,16 +6,14 @@ class BalanceHandler:
     def get_balance(actor: str, user: str, gid: str):
         replica = DataHandler.get_user_replica(actor)
         if not replica:
-            print("User " + actor + " replica does not exist on local storage.")
-            return None
+            return (None, "User " + actor + " replica does not exist on local storage.")
         group = replica.get("groups").get(gid)
         if not group: 
-            print("Group " + gid + " does not exist on users " + actor + " replica.")
-            return None
+            return (None, "Group " + gid + " does not exist on users " + actor + " replica.")
         if not group.get("members")[user]: #and group.get("members")[user] % 2 == 0:
             #print("User " + user + " is not a member in the group " + gid)
             #print("User " + user + " was never a member of the group " + gid)
-            return None
+            return (None, "User " + user + " was never a member of the group " + gid)
         
         expenses = replica["recorded_expenses"]
         group_expenses = [
@@ -32,10 +30,10 @@ class BalanceHandler:
             gifts_received = group.get("gifts_received") / group_member_cardinality
             balance += gifts_received
         else :
-            print("There is no user left in the group. The total amount gifted to the group is " + str(group.get("gifts_received")) + ".")
+            return (None, "There is no user left in the group. The total amount gifted to the group is " + str(group.get("gifts_received")) + ".")
 
         #balance = pays - owes - gifts_sent + gifts_received
-        return balance
+        return (balance, "")
 
 
     @staticmethod
@@ -83,14 +81,12 @@ class BalanceHandler:
     def recalculate_gifts(user_id: str, gid: str, write_to_replica: bool):
         replica = DataHandler.get_user_replica(user_id)
         if not replica:
-            print("[BalanceHandler] Users " + user_id + " replica does not exist on local storage.")
-            return -1
+            return (-1, "[BalanceHandler] Users " + user_id + " replica does not exist on local storage.")
         group = replica.get("groups").get(gid)
         expenses = replica.get("recorded_expenses")
         
         if not group:
-            print("[BalanceHandler]  Group " + gid + " does not exist on user " + user_id + " replica.")
-            return -1
+            return (-1, "[BalanceHandler]  Group " + gid + " does not exist on user " + user_id + " replica.")
         
         balances = BalanceHandler.compute_balances(group, expenses)
         updated_group = BalanceHandler.compute_gifts(group, balances)

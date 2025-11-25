@@ -48,7 +48,7 @@ class CLIInterface:
 
         if not matches:
             print(f"No {entity_type} found with name or id '{name_or_id}'.")
-            return None
+            return ""
 
         if len(matches) == 1:
             return matches[0]
@@ -67,7 +67,7 @@ class CLIInterface:
         if chosen in matches:
             return chosen
         print("Invalid choice.")
-        return None
+        return ""
 
 
     def run(self):
@@ -90,32 +90,32 @@ class CLIInterface:
                 elif cmd == "show":
                     self.cmd_show(args)
                 elif cmd == "group-create":
-                    self.cmd_group_create(args)
+                    print(self.cmd_group_create(args))
                 elif cmd == "group-add-member":
                     print("Command unavailable")
                     # self.cmd_group_add_member(args)
                 elif cmd == "group-invite":
-                    self.cmd_group_invite(args)
+                    print(self.cmd_group_invite(args))
                 elif cmd == "group-accept":
-                    self.cmd_group_accept(args)
+                    print(self.cmd_group_accept(args))
                 elif cmd == "group-invitations":
-                    self.cmd_group_invitations()
+                    print(self.cmd_group_invitations())
                 elif cmd == "group-leave":
-                    self.cmd_group_leave(args)
+                    print(self.cmd_group_leave(args))
                 elif cmd == "group-suggest-payer":
-                    self.cmd_group_suggest_payer(args)
+                    print(self.cmd_group_suggest_payer(args))
                 elif cmd == "expense-create":
-                    self.cmd_expense_create(args)
+                    print(self.cmd_expense_create(args))
                 elif cmd == "expense-delete":
-                    self.cmd_expense_delete(args)
+                    print(self.cmd_expense_delete(args))
                 elif cmd == "expense-modify":
-                    self.cmd_expense_modify(args)
+                    print(self.cmd_expense_modify(args))
                 elif cmd == "expense-add-to-group":
-                    self.cmd_expense_add_to_group(args)
+                    print(self.cmd_expense_add_to_group(args))
                 elif cmd == "expense-remove-from-group":
-                    self.cmd_expense_remove_from_group(args)
+                    print(self.cmd_expense_remove_from_group(args))
                 elif cmd == "group-balance":
-                    self.cmd_group_balance(args)
+                    print(self.cmd_group_balance(args))
                 elif cmd == "clear":
                     self.cmd_clear()
                 elif cmd == "sync-address":
@@ -179,13 +179,13 @@ Available commands:
     def cmd_sync_send(self, args):
         if len(args) != 2:
             print("Usage: sync-send <host> <port>")
-            return
+            return ""
         ReplicaSync.send_full_replica(args[0], int(args[1]))
 
     def cmd_sync_request(self, args):
         if len(args) != 2:
             print("Usage: sync-request <host> <port>")
-            return
+            return ""
         ReplicaSync.request_replica(args[0], int(args[1]))
 
 
@@ -208,11 +208,10 @@ Available commands:
 
     def cmd_group_create(self, args):
         if not args:
-            print("Usage: group-create <name>")
-            return
+            return "Usage: group-create <name>"
         name = " ".join(args)
         gid = GroupHandler.create_group(self.user_id, name)
-        print(f"Created group '{name}' with id {gid}")
+        return f"Created group '{name}' with id {gid}"
 
     def cmd_group_add_member(self, args):
         if len(args) < 2:
@@ -225,132 +224,123 @@ Available commands:
 
     def cmd_group_invite(self, args):
         if len(args) < 2:
-            print("Usage: group-invite <group> <user>")
-            return
+            #print("Usage: group-invite <group> <user>")
+            return("Usage: group-invite <group> <user>")
         gid = self._resolve_entity("group", args[0])
         uid = self._resolve_entity("user", args[1])
         if gid and uid:
-            GroupHandler.invite_member(self.user_id, uid, gid)
+            return GroupHandler.invite_member(self.user_id, uid, gid)[1]
 
     def cmd_group_accept(self, args):
         if len(args) < 1:
-            print("Usage: group-accept <group>")
-            return
+            return "Usage: group-accept <group>"
         gid = self._resolve_entity("group", args[0])
         if gid:
-            GroupHandler.accept_invitation(self.user_id, gid)
+            return GroupHandler.accept_invitation(self.user_id, gid)[1]
 
     def cmd_group_invitations(self):
         replica = DataHandler.get_user_replica(self.user_id)
         groups = replica.get("groups", {})
-        print("Pending invitations:")
+        return_str = "Pending invitations:\n"
         for gid, g in groups.items():
             persumed = g.get("persumed_members", {})
             if persumed.get(self.user_id, 0) % 2 == 1:  # contender
-                print(f"  - {g['name']} (id: {gid})")
+                return_str.append((f"  - {g['name']} (id: {gid})\n"))
+        return return_str
 
 
     def cmd_group_leave(self, args):
         if len(args) < 1:
-            print("Usage: group-leave <group>")
-            return
+            return "Usage: group-leave <group>"
         gid = self._resolve_entity("group", args[0])
         if gid:
-            GroupHandler.leave_group(self.user_id, gid)
+            return GroupHandler.leave_group(self.user_id, gid)[1]
 
     def cmd_group_suggest_payer(self, args):
         if len(args) < 1:
-            print("Usage: suggest-payer <group>")
-            return
+            return "Usage: suggest-payer <group>"
 
         gid = self._resolve_entity("group", args[0])
         if not gid:
-            print("Group " + gid + " does not exist.")
-            return
+            return "Group " + gid + " does not exist."
 
-        result = GroupHandler.get_lowest_balance_in_group(self.user_id, gid)
+        result = GroupHandler.get_lowest_balance_in_group(self.user_id, gid)[0]
         if not result:
-            print("Could not calculate balance or group is empty.")
-            return
+            return "Could not calculate balance or group is empty."
 
         uid, bal = result
         replica = DataHandler.get_user_replica(self.user_id)
         name = replica.get("known_users", {}).get(uid, uid)
-
-        print(f"Suggested next payer: {name} (id: {uid}) with current balance {bal}")
+        return f"Suggested next payer: {name} (id: {uid}) with current balance {bal}"
 
 
 
     def cmd_expense_create(self, args):
         if len(args) < 2:
-            print("Usage: expense-create <name> <user>:<share> ...")
-            return
+            return "Usage: expense-create <name> <user>:<share> ..."
         name = args[0]
         shares = {}
         for share_part in args[1:]:
             if ":" not in share_part:
-                print(f"Invalid share: {share_part}")
-                return
+                return f"Invalid share: {share_part}"
             uname, val = share_part.split(":")
             uid = self._resolve_entity("user", uname)
             if not uid:
-                return
+                return f"Invalid user id: {uid}"
             shares[uid] = float(val)
-        eid = ExpenseHandler.create_expense(self.user_id, name, shares)
+        eid, msg = ExpenseHandler.create_expense(self.user_id, name, shares)
         if eid != -1:
-            print(f"Created expense '{name}' with id {eid}")
+            return msg
 
     def cmd_expense_delete(self, args):
         if len(args) < 1:
-            print("Usage: expense-delete <expense>")
-            return
+            return "Usage: expense-delete <expense>"
         eid = self._resolve_entity("expense", args[0])
         if eid:
-            ExpenseHandler.delete_expense(self.user_id, eid)
+            return ExpenseHandler.delete_expense(self.user_id, eid)[1]
+        else: return ""
 
     def cmd_expense_modify(self, args):
         if len(args) < 2:
-            print("Usage: expense-modify <expense> <user>:<share> ...")
-            return
+            return "Usage: expense-modify <expense> <user>:<share> ..."
         eid = self._resolve_entity("expense", args[0])
         shares = {}
-        for s in args[1:]:
-            uname, val = s.split(":")
+        for share_part in args[1:]:
+            if ":" not in share_part:
+                return f"Invalid share: {share_part}"
+            uname, val = share_part.split(":")
             uid = self._resolve_entity("user", uname)
             if not uid:
-                return
+                return f"Invalid user id: {uid}"
             shares[uid] = float(val)
         if eid:
-            ExpenseHandler.modify_expense_parameters(self.user_id, eid, shares)
+            return ExpenseHandler.modify_expense_parameters(self.user_id, eid, shares)[1]
 
     def cmd_expense_add_to_group(self, args):
         if len(args) < 2:
-            print("Usage: expense-add-to-group <expense> <group>")
-            return
+            return "Usage: expense-add-to-group <expense> <group>"
         eid = self._resolve_entity("expense", args[0])
         gid = self._resolve_entity("group", args[1])
         if eid and gid:
-            ExpenseHandler.add_expense_to_group(self.user_id, eid, gid)
+            return ExpenseHandler.add_expense_to_group(self.user_id, eid, gid)[1]
 
     def cmd_expense_remove_from_group(self, args):
         if len(args) < 1:
-            print("Usage: expense-remove-from-group <expense>")
-            return
+            return "Usage: expense-remove-from-group <expense>"
         eid = self._resolve_entity("expense", args[0])
         if eid:
-            ExpenseHandler.remove_expense_from_group(self.user_id, eid)
+            return ExpenseHandler.remove_expense_from_group(self.user_id, eid)[1]
 
     def cmd_group_balance(self, args):
         if len(args) < 2:
-            print("Usage: balance <group> <user>")
-            return
+            return "Usage: balance <group> <user>"
         gid = self._resolve_entity("group", args[0])
         uid = self._resolve_entity("user", args[1])
         if gid and uid:
-            balance = BalanceHandler.get_balance(self.user_id, uid, gid)
+            balance, msg = BalanceHandler.get_balance(self.user_id, uid, gid)
             if balance == None:
-                return
-            print(f"Balance of user {args[1]} (id: {uid}) in group {args[0]} (id: {gid}): {balance}")
+                return msg
+            return f"Balance of user {args[1]} (id: {uid}) in group {args[0]} (id: {gid}): {balance}"
 
     def cmd_clear(self):
         os.system('cls' if os.name == 'nt' else 'clear')

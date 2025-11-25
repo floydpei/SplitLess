@@ -60,28 +60,27 @@ class GroupHandler:
     @staticmethod
     def get_balances_in_group(actor: str, gid: str):
         replica = DataHandler.get_user_replica(actor)
+        return_str = ""
         if not replica:
-            print("[GroupHandler] User " + actor + " replica does not exist on local storage.")
-            return
+            return (None, "[GroupHandler] User " + actor + " replica does not exist on local storage.")
         group = replica.get("groups").get(gid)
         if not group: 
-            print("[GroupHandler] Group " + gid + " does not exist on users " + actor + " replica.")
-            return
+            return (None, "[GroupHandler] Group " + gid + " does not exist on users " + actor + " replica.")
         
         group_members = GroupHandler.get_members(actor, group)
         balances = {}
         for member in group_members:
             balances[member] = BalanceHandler.get_balance(actor, member, gid)
 
-        return balances
+        return (balances, return_str)
 
     @staticmethod
     def get_lowest_balance_in_group(actor: str, gid: str):
-        balances = GroupHandler.get_balances_in_group(actor, gid)
+        balances, msg = GroupHandler.get_balances_in_group(actor, gid)
         if not balances:
-            return -1
+            return (None, msg)
         min_item = min(balances.items(), key=lambda item: item[1])
-        return min_item
+        return (min_item, msg)
         
 
     
@@ -96,8 +95,8 @@ class GroupHandler:
         group_as_dict = asdict(new_group)
         #print(group_as_dict)
         DataHandler.write_group(creator, group_as_dict)
-        print("[GroupHandler] Succesfully created a group with id " + gid)
-        return gid
+        return_str = "[GroupHandler] Succesfully created a group with id " + gid
+        return (gid, "[GroupHandler] Succesfully created a group with id " + gid)
 
     """
     @staticmethod
@@ -129,69 +128,55 @@ class GroupHandler:
     def invite_member(actor: str, new_member: str, gid: str):
         group = DataHandler.get_group(actor, gid)
         if not group:
-            print("[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
-            return -1
+            return (-1, "[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
         if not GroupHandler.is_member(actor, group):
-            print("[GroupHandler] User with id " + actor + " is not in the group with id " + gid + ", and cannot add a user to it.")
-            return -1
+            return (-1, "[GroupHandler] User with id " + actor + " is not in the group with id " + gid + ", and cannot add a user to it.")
         known_users = DataHandler.get_known_users(actor).keys()
         if not new_member in known_users: 
-            print("[GroupHandler] The user with id " + new_member + " is not known, so it cannot be added to the group.")
-            return -1
+            return (-1, "[GroupHandler] The user with id " + new_member + " is not known, so it cannot be added to the group.")
         if GroupHandler.is_member(new_member, group):
-            print("[GroupHandler] User with id " + new_member + " is already in the group")
-            return -1
+            return (-1, "[GroupHandler] User with id " + new_member + " is already in the group")
         if GroupHandler.is_member_contender(new_member, group):
-            print("[GroupHandler] User with id " + new_member + " is already invided to the group")
-            return -1
+            return (-1, "[GroupHandler] User with id " + new_member + " is already invided to the group")
         
         group.get("persumed_members")[new_member] = group.get("persumed_members").get(new_member, 0) + 1
         DataHandler.write_group(actor, group)
-        print("[GroupHandler] Succesfully invited user " + new_member + " to the group " + gid + ".")
-        return 1
+        return (1, "[GroupHandler] Succesfully invited user " + new_member + " to the group " + gid + ".")
     
     @staticmethod
     def accept_invitation(actor: str, gid: str):
         group = DataHandler.get_group(actor, gid)
         if not group:
-            print("[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
-            return -1
+            return (-1 , "[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
         members = group.get("members")
         persumed_members = group.get("persumed_members")
         if GroupHandler.is_member(actor, group):
-            print("[GroupHandler] User " + actor + " is already a member of the group " + gid)
-            return -1
+            return (-1, "[GroupHandler] User " + actor + " is already a member of the group " + gid)
         if not GroupHandler.is_member_contender(actor, group):
-            print("[GroupHandler] User " + actor + " has no active invitation to the group " + gid)
-            return -1
+            return (-1, "[GroupHandler] User " + actor + " has no active invitation to the group " + gid)
         members[actor] = members.get(actor, 0) + 1
         persumed_members[actor] = persumed_members.get(actor, 0) + 1
         DataHandler.write_group(actor, group)
-        print("[GroupHandler] User " + actor + " has is now a member of the group " + gid)
-        return 1
+        return (1, "[GroupHandler] User " + actor + " has is now a member of the group " + gid)
 
 
     @staticmethod
     def leave_group(actor: str, gid: str):
         group = DataHandler.get_group(actor, gid)
         if not group:
-            print("[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
-            return -1
+            return (-1, "[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
         
         if not GroupHandler.is_member(actor, group):
-            print("[GroupHandler] User with id " + actor + " is not a member of group " + gid)
-            return -1
+            return (-1 ,"[GroupHandler] User with id " + actor + " is not a member of group " + gid)
         
         user_balance = BalanceHandler.get_balance(actor, actor, gid)
         if user_balance < 0:
-            print("[GroupHandler] User " + actor + " has a negative balance of " + user_balance + " and can not leave the group.")
-            return -1
+            return (-1, "[GroupHandler] User " + actor + " has a negative balance of " + user_balance + " and can not leave the group.")
         
         group["members"][actor] += 1
         DataHandler.write_group(actor, group)
         updated_group = BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=False)
         DataHandler.write_group(actor, updated_group)
-        print("[GroupHandler] User" + actor + " left the group " + gid + ".")
-        return 1
+        return (1, "[GroupHandler] User" + actor + " left the group " + gid + ".")
 
 
