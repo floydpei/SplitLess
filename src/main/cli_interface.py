@@ -7,6 +7,7 @@ from expense_handler import ExpenseHandler, Expense
 from balance_handler import BalanceHandler
 from replica_sync import ReplicaSync
 import time
+from storage_provider import get_backend
 
 
 class CLIInterface:
@@ -23,7 +24,8 @@ class CLIInterface:
             print("[ReplicaSync] Failed to start listener.")
 
     def _resolve_entity(self, entity_type: str, name_or_id: str):
-        replica = DataHandler.get_user_replica(self.user_id)
+        backend = get_backend()
+        replica = backend.get_full_replica(self.user_id)
         entities = {}
 
         if entity_type == "user":
@@ -191,7 +193,8 @@ Available commands:
 
 
     def cmd_show(self, args):
-        replica = DataHandler.get_user_replica(self.user_id)
+        backend = get_backend()
+        replica = backend.get_full_replica(self.user_id)
         if not args or args[0] == "all":
             print(replica)
         elif args[0] == "groups":
@@ -239,7 +242,8 @@ Available commands:
             return GroupHandler.accept_invitation(self.user_id, gid)[1]
 
     def cmd_group_invitations(self):
-        replica = DataHandler.get_user_replica(self.user_id)
+        backend = get_backend()
+        replica = backend.get_full_replica(self.user_id)
         groups = replica.get("groups", {})
         return_str = "Pending invitations:\n"
         for gid, g in groups.items():
@@ -257,6 +261,7 @@ Available commands:
             return GroupHandler.leave_group(self.user_id, gid)[1]
 
     def cmd_group_suggest_payer(self, args):
+        backend = get_backend()
         if len(args) < 1:
             return "Usage: suggest-payer <group>"
 
@@ -269,7 +274,7 @@ Available commands:
             return "Could not calculate balance or group is empty."
 
         uid, bal = result
-        replica = DataHandler.get_user_replica(self.user_id)
+        replica = backend.get_full_replica(self.user_id)
         name = replica.get("known_users", {}).get(uid, uid)
         return f"Suggested next payer: {name} (id: {uid}) with current balance {bal}"
 

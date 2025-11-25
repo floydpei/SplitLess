@@ -2,6 +2,7 @@ from data_handler import DataHandler
 import os
 import uuid
 import getpass
+from storage_provider import get_backend
 
 USERS_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/local_users.json"))
 
@@ -26,7 +27,8 @@ class UserManager:
 
     @classmethod
     def create_user(cls):
-        local_users = DataHandler.get_local_users()
+        backend = get_backend()
+        local_users = backend.get_local_users()
 
         while True:
             username = input("Enter a new username: ").strip()
@@ -49,14 +51,14 @@ class UserManager:
         user_id = str(uuid.uuid4())[:8]
         local_users[user_id] = {
             "name": username,
-            "password_hash": DataHandler.hash_password(password)
+            "password_hash": backend.hash_password(password)
         }
 
-        DataHandler.write_local_users(local_users)
+        backend.write_local_users(local_users)
         print(f"User '{username}' created successfully with id {user_id}.")
 
         # Initialize empty replica for the user
-        DataHandler.write_user_replica(user_id, {
+        backend.write_full_replica(user_id, {
             "recorded_expenses": {},
             "groups": {},
             "known_users": {user_id: username}
@@ -66,7 +68,8 @@ class UserManager:
     
     @classmethod
     def login_user(cls):
-        local_users = DataHandler.get_local_users()
+        backend = get_backend()
+        local_users = backend.get_local_users()
 
         username = input("Enter your username: ").strip()
         if not UserManager.name_exists_locally(username, local_users):
@@ -76,7 +79,7 @@ class UserManager:
         user_id = UserManager.get_id_from_name(username, local_users)
 
         password = getpass.getpass("Enter your password: ")
-        hashed = DataHandler.hash_password(password)
+        hashed = backend.hash_password(password)
         if hashed != local_users[user_id]["password_hash"]:
             print("Incorrect password.")
             return None

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Dict
 from data_handler import DataHandler
 from balance_handler import BalanceHandler
+from storage_provider import get_backend
 
 @dataclass
 class Group:
@@ -59,7 +60,8 @@ class GroupHandler:
     
     @staticmethod
     def get_balances_in_group(actor: str, gid: str):
-        replica = DataHandler.get_user_replica(actor)
+        backend = get_backend()
+        replica = backend.get_full_replica(actor)
         return_str = ""
         if not replica:
             return (None, "[GroupHandler] User " + actor + " replica does not exist on local storage.")
@@ -86,6 +88,7 @@ class GroupHandler:
     
     @staticmethod
     def create_group(creator: str, name : str):
+        backend = get_backend()
         gid = str(uuid.uuid4())[:8]
         members = {creator: 1}
         persumed_members = {creator: 2}
@@ -94,8 +97,7 @@ class GroupHandler:
         new_group = Group(gid=gid, name=name, members=members, persumed_members=persumed_members, gifts_received=gifts_received)
         group_as_dict = asdict(new_group)
         #print(group_as_dict)
-        DataHandler.write_group(creator, group_as_dict)
-        return_str = "[GroupHandler] Succesfully created a group with id " + gid
+        backend.write_group(creator, group_as_dict)
         return (gid, "[GroupHandler] Succesfully created a group with id " + gid)
 
     """
@@ -126,12 +128,13 @@ class GroupHandler:
     
     @staticmethod
     def invite_member(actor: str, new_member: str, gid: str):
-        group = DataHandler.get_group(actor, gid)
+        backend = get_backend()
+        group = backend.get_group(actor, gid)
         if not group:
             return (-1, "[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
         if not GroupHandler.is_member(actor, group):
             return (-1, "[GroupHandler] User with id " + actor + " is not in the group with id " + gid + ", and cannot add a user to it.")
-        known_users = DataHandler.get_known_users(actor).keys()
+        known_users = backend.get_known_users(actor).keys()
         if not new_member in known_users: 
             return (-1, "[GroupHandler] The user with id " + new_member + " is not known, so it cannot be added to the group.")
         if GroupHandler.is_member(new_member, group):
@@ -140,12 +143,13 @@ class GroupHandler:
             return (-1, "[GroupHandler] User with id " + new_member + " is already invided to the group")
         
         group.get("persumed_members")[new_member] = group.get("persumed_members").get(new_member, 0) + 1
-        DataHandler.write_group(actor, group)
+        backend.write_group(actor, group)
         return (1, "[GroupHandler] Succesfully invited user " + new_member + " to the group " + gid + ".")
     
     @staticmethod
     def accept_invitation(actor: str, gid: str):
-        group = DataHandler.get_group(actor, gid)
+        backend = get_backend()
+        group = backend.get_group(actor, gid)
         if not group:
             return (-1 , "[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
         members = group.get("members")
@@ -156,13 +160,14 @@ class GroupHandler:
             return (-1, "[GroupHandler] User " + actor + " has no active invitation to the group " + gid)
         members[actor] = members.get(actor, 0) + 1
         persumed_members[actor] = persumed_members.get(actor, 0) + 1
-        DataHandler.write_group(actor, group)
+        backend.write_group(actor, group)
         return (1, "[GroupHandler] User " + actor + " has is now a member of the group " + gid)
 
 
     @staticmethod
     def leave_group(actor: str, gid: str):
-        group = DataHandler.get_group(actor, gid)
+        backend = get_backend()
+        group = backend.get_group(actor, gid)
         if not group:
             return (-1, "[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
         
@@ -174,9 +179,9 @@ class GroupHandler:
             return (-1, "[GroupHandler] User " + actor + " has a negative balance of " + user_balance + " and can not leave the group.")
         
         group["members"][actor] += 1
-        DataHandler.write_group(actor, group)
+        backend.write_group(actor, group)
         updated_group = BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=False)
-        DataHandler.write_group(actor, updated_group)
+        backend.write_group(actor, updated_group)
         return (1, "[GroupHandler] User" + actor + " left the group " + gid + ".")
 
 

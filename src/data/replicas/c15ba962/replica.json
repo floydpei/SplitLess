@@ -4,13 +4,12 @@
       "eid": "1ee0feda",
       "name": "test",
       "group": "e635a5a5",
-      "version": 5,
+      "version": 6,
       "payer": "c15ba962",
-      "amount": 5.0,
+      "amount": 2.0,
       "deleted": false,
       "shares": {
-        "c15ba962": 2.0,
-        "e42c27ce": 3.0
+        "e42c27ce": 2.0
       }
     }
   },

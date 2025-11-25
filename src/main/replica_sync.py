@@ -3,6 +3,7 @@ from network_handler import UDPNetworkHandler, NetworkMessage, MessageType
 from data_handler import DataHandler
 from balance_handler import BalanceHandler
 import sys, threading
+from storage_provider import get_backend
 
 print_lock = threading.Lock()
 
@@ -70,7 +71,8 @@ class ReplicaSync:
 
     @staticmethod
     def _merge_replica(other_replica):
-        own_replica = DataHandler.get_user_replica(ReplicaSync.user_id)
+        backend = get_backend()
+        own_replica = backend.get_full_replica(ReplicaSync.user_id)
         own_expenses = own_replica.get("recorded_expenses")
         own_groups = own_replica.get("groups")
         own_users = own_replica.get("known_users")
@@ -97,7 +99,7 @@ class ReplicaSync:
             "known_users": merged_users
         }
 
-        DataHandler.write_user_replica(ReplicaSync.user_id, merged_replica)
+        backend.write_full_replica(ReplicaSync.user_id, merged_replica)
         for gid in set(merged_replica.get("groups").keys()):
             BalanceHandler.recalculate_gifts(ReplicaSync.user_id, gid=gid, write_to_replica=True)
         return 0
@@ -214,11 +216,12 @@ class ReplicaSync:
 
     @staticmethod
     def send_full_replica(target_host: str, target_port: int):
+        backend = get_backend()
         if not ReplicaSync.network_handler:
             ReplicaSync.safe_print("[ReplicaSync] Listener not running — cannot send.")
             return
 
-        replica = DataHandler.get_user_replica(ReplicaSync.user_id)
+        replica = backend.get_full_replica(ReplicaSync.user_id)
         msg = NetworkMessage(
             MessageType.REPLICA_UPDATE,
             {

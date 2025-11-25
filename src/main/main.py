@@ -5,8 +5,10 @@ from expense_handler import Expense, ExpenseHandler
 from group_handler import GroupHandler, Group
 from balance_handler import BalanceHandler
 from cli_interface import CLIInterface
+from storage_provider import get_backend
 
 def handle_startup():
+    backend = get_backend()
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Welcome to SplitLess CLI")
 
@@ -29,14 +31,14 @@ def handle_startup():
         else:
             print("Invalid option. Try again.")
     
-    replica_data = DataHandler.get_user_replica(user_id)
+    replica_data = backend.get_full_replica(user_id)
 
     if not replica_data:
         replica_data = {
             "recorded_expenses": {},
             "groups": {}
         }
-        DataHandler.write_user_replica(replica_data)
+        backend.write_full_replica(replica_data)
 
     print(f"Replica loaded for {username}. You can now start using the app.")
     return user_id

@@ -4,6 +4,7 @@ from typing import Dict
 from data_handler import DataHandler
 from group_handler import GroupHandler
 from balance_handler import BalanceHandler
+from storage_provider import get_backend
 
 @dataclass
 class Expense:
@@ -40,6 +41,7 @@ class ExpenseHandler:
 
     @staticmethod
     def create_expense(payer: str, name: str, shares: Dict[str, float]):
+        backend = get_backend()
         eid = str(uuid.uuid4())[:8]
         group = None
         version = 0
@@ -55,12 +57,13 @@ class ExpenseHandler:
         new_expense = Expense(eid, name, group, version, payer, amount, deleted, shares)
         expense_as_dict = asdict(new_expense)
         #print(expense_as_dict)
-        DataHandler.write_expense(payer, expense_as_dict)
+        backend.write_expense(payer, expense_as_dict)
         return (eid, "[ExpenseHandler] Succesfully created new expense with id " + eid)
 
     @staticmethod
     def delete_expense(actor: str, eid: str):
-        expense = DataHandler.get_expense(actor, eid)
+        backend = get_backend()
+        expense = backend.get_expense(actor, eid)
         if not expense:
             return (-1, "[ExpenseHandler] The expense with id " + eid + " does not exist on user " + actor + " replica.")
         if not actor == expense["payer"]:
@@ -70,21 +73,22 @@ class ExpenseHandler:
         
         gid = expense.get("group")
         if gid:
-            group = group = DataHandler.get_group(actor, gid)
+            group = group = backend.get_group(actor, gid)
             if not GroupHandler.is_member(actor, group):
                 return (-1, "[ExpenseHandler] User " + actor + " is not member of the group " + gid + " and cannot delete the expense " + eid)
         
         expense["deleted"] = True
         expense["version"] += 1
-        DataHandler.write_expense(actor, expense)
+        backend.write_expense(actor, expense)
         if not expense.get("group") == None:
             BalanceHandler.recalculate_gifts(actor, expense.get("group"), write_to_replica=True)
         return (1, "[ExpenseHandler] Succesfully deleted expense " + eid)
 
     @staticmethod
     def add_expense_to_group(actor: str, eid: str, gid: str):
-        expense = DataHandler.get_expense(actor, eid)
-        group = DataHandler.get_group(actor, gid)
+        backend = get_backend()
+        expense = backend.get_expense(actor, eid)
+        group = backend.get_group(actor, gid)
 
         if not group:
             return (-1, "[ExpenseHandler] The group with id " + gid + " does not exist on user " + actor + " replica.")
@@ -104,19 +108,20 @@ class ExpenseHandler:
         
         expense["group"] = gid
         expense["version"] += 1
-        DataHandler.write_expense(actor, expense)
+        backend.write_expense(actor, expense)
         return (1, "[ExpenseHandler] Succesfully added expense " + eid + " to group " + gid)
 
     @staticmethod
     def remove_expense_from_group(actor: str, eid: str):
-        expense = DataHandler.get_expense(actor, eid)
+        backend = get_backend()
+        expense = backend.get_expense(actor, eid)
         if not expense:
             return (-1, "[ExpenseHandler] The expense with id " + eid + " does not exist on user " + actor + " replica.")
         gid = expense.get("group")
         if not gid:
             return (-1, "[ExpenseHandler] The expense with id " + eid + " is in no group on users " + actor + " replica.")
         
-        group = DataHandler.get_group(actor, gid)
+        group = backend.get_group(actor, gid)
 
         if not actor == expense["payer"]:
             return (-1, "[ExpenseHandler] The user with id " + actor + " did not pay for the expense and cannot add it to a group.")
@@ -125,13 +130,14 @@ class ExpenseHandler:
         
         expense["group"] = None
         expense["version"] += 1
-        DataHandler.write_expense(actor, expense)
+        backend.write_expense(actor, expense)
         BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
         return (1, "[ExpenseHandler] Succesfully removed expense " + eid + " from group " + gid)
 
     @staticmethod
     def modify_expense_parameters(actor: str, eid: str, shares):
-        expense = DataHandler.get_expense(actor, eid)
+        backend = get_backend()
+        expense = backend.get_expense(actor, eid)
         if not expense:
             return (-1, "[ExpenseHandler] The expense with id " + eid + " does not exist on user " + actor + " replica.")
         if not actor == expense["payer"]:
@@ -147,7 +153,7 @@ class ExpenseHandler:
         
         gid = expense.get("group")
         if gid:
-            group = group = DataHandler.get_group(actor, gid)
+            group = group = backend.get_group(actor, gid)
             if not GroupHandler.is_member(actor, group):
                 return (-1, "[ExpenseHandler] User " + actor + " is not member of the group " + gid)
             for user in shares.keys():
@@ -156,7 +162,7 @@ class ExpenseHandler:
         expense["shares"] = shares
         expense["amount"] = amount
         expense["version"] += 1
-        DataHandler.write_expense(actor, expense)
+        backend.write_expense(actor, expense)
         if gid:
             BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
         return (1, "[ExpenseHandler] Succesfully modified expense " + eid)

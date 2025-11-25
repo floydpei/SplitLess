@@ -1,10 +1,13 @@
 from data_handler import DataHandler
+from storage_provider import get_backend
 
 class BalanceHandler:
 
+
     @staticmethod
     def get_balance(actor: str, user: str, gid: str):
-        replica = DataHandler.get_user_replica(actor)
+        backend = get_backend()
+        replica = backend.get_full_replica(actor)
         if not replica:
             return (None, "User " + actor + " replica does not exist on local storage.")
         group = replica.get("groups").get(gid)
@@ -79,7 +82,8 @@ class BalanceHandler:
 
     @staticmethod
     def recalculate_gifts(user_id: str, gid: str, write_to_replica: bool):
-        replica = DataHandler.get_user_replica(user_id)
+        backend = get_backend()
+        replica = backend.get_full_replica(user_id)
         if not replica:
             return (-1, "[BalanceHandler] Users " + user_id + " replica does not exist on local storage.")
         group = replica.get("groups").get(gid)
@@ -91,6 +95,6 @@ class BalanceHandler:
         balances = BalanceHandler.compute_balances(group, expenses)
         updated_group = BalanceHandler.compute_gifts(group, balances)
 
-        if write_to_replica: DataHandler.write_group(user_id, updated_group)
+        if write_to_replica: backend.write_group(user_id, updated_group)
         return updated_group
         
