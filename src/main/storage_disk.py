@@ -34,6 +34,9 @@ class DiskReplicaBackend(ReplicaStorageBackend):
     def get_full_replica(self, user_id: str) -> dict:
         data = self._read_json(self._replica_path(user_id))
         return copy.deepcopy(data)
+    
+    def get_full_replica_deep(self, user_id: str) -> dict:
+        return self.get_full_replica(user_id=user_id)
 
     def write_full_replica(self, user_id: str, replica: dict) -> None:
         self._write_json(self._replica_path(user_id), replica)
@@ -92,12 +95,10 @@ class DiskReplicaBackend(ReplicaStorageBackend):
         self.write_full_replica(user_id, user_replica)
 
     def get_local_users(self):
-        """Return all locally stored users"""
         path = os.path.join(DATA_DIR, "local_users.json")
         return self._read_json(path)
 
     def write_local_users(self, local_users):
-        """Write all local users to disk"""
         path = os.path.join(DATA_DIR, "local_users.json")
         self._write_json(path, local_users)
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Dict
 from data_handler import DataHandler
 from balance_handler import BalanceHandler
-from storage_provider import get_backend
+from storage_provider import get_backend, get_backend_type
 
 @dataclass
 class Group:
@@ -54,6 +54,13 @@ class GroupHandler:
             if GroupHandler.is_member(user, group): members.append(user)
         return members
     
+    @staticmethod
+    def get_members_including_left(actor: str, group: Group):
+        members = []
+        for user in group.get("members"):
+            members.append(user)
+        return members
+
     @staticmethod
     def get_amount_members(actor: str, group: Group):
         return GroupHandler.get_members(actor, group).length
@@ -174,9 +181,9 @@ class GroupHandler:
         if not GroupHandler.is_member(actor, group):
             return (-1 ,"[GroupHandler] User with id " + actor + " is not a member of group " + gid)
         
-        user_balance = BalanceHandler.get_balance(actor, actor, gid)
+        user_balance, _ = BalanceHandler.get_balance(actor, actor, gid)
         if user_balance < 0:
-            return (-1, "[GroupHandler] User " + actor + " has a negative balance of " + user_balance + " and can not leave the group.")
+            return (-1, f"[GroupHandler] User {actor} has a negative balance of {user_balance} and can not leave the group.")
         
         group["members"][actor] += 1
         backend.write_group(actor, group)

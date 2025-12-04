@@ -389,7 +389,7 @@ Inv_ExpenseGroupExists ==
   \A rid \in POSSIBLE_REPLICA_IDs :
     \A eid \in POSSIBLE_EXPENSE_IDs :
       /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
-      /\ replicas[rid].recordedExpenses[eid].deleted = FALSE
+      /\ replicas[rid].recordedExpenses[eid].deleted = FALSE        \* remove this?
       /\ replicas[rid].recordedExpenses[eid].group # NO_GROUP
       =>
          replicas[rid].groups[ replicas[rid].recordedExpenses[eid].group ] # NO_GROUP
@@ -490,5 +490,5 @@ FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Nov 20 12:46:45 CET 2025 by floyd
+\* Last modified Mon Dec 01 13:41:59 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd

@@ -18,6 +18,12 @@ class MemoryReplicaBackend(ReplicaStorageBackend):
 
     def get_full_replica(self, user_id: str) -> dict:
         self._ensure_replica(user_id)
+        return self._replicas[user_id]
+        #return copy.deepcopy(self._replicas[user_id])
+    
+    def get_full_replica_deep(self, user_id: str) -> dict:
+        self._ensure_replica(user_id)
+        #return self._replicas[user_id]
         return copy.deepcopy(self._replicas[user_id])
 
     def write_full_replica(self, user_id: str, replica: dict) -> None:
@@ -27,7 +33,8 @@ class MemoryReplicaBackend(ReplicaStorageBackend):
 
     def get_expenses(self, user_id: str) -> dict:
         self._ensure_replica(user_id)
-        return copy.deepcopy(self._replicas[user_id]["recorded_expenses"])
+        return self._replicas[user_id]["recorded_expenses"]
+        #return copy.deepcopy(self._replicas[user_id]["recorded_expenses"])
 
     def write_expenses(self, user_id: str, expenses: dict) -> None:
         self._ensure_replica(user_id)
@@ -36,7 +43,8 @@ class MemoryReplicaBackend(ReplicaStorageBackend):
 
     def get_groups(self, user_id: str) -> dict:
         self._ensure_replica(user_id)
-        return copy.deepcopy(self._replicas[user_id]["groups"])
+        return self._replicas[user_id]["groups"]
+        #return copy.deepcopy(self._replicas[user_id]["groups"])
 
     def write_groups(self, user_id: str, groups: dict) -> None:
         self._ensure_replica(user_id)
@@ -45,7 +53,8 @@ class MemoryReplicaBackend(ReplicaStorageBackend):
 
     def get_expense(self, user_id: str, eid: str) -> dict:
         self._ensure_replica(user_id)
-        return copy.deepcopy(self._replicas[user_id]["recorded_expenses"].get(eid, {}))
+        return self._replicas[user_id]["recorded_expenses"].get(eid, {})
+        #return copy.deepcopy(self._replicas[user_id]["recorded_expenses"].get(eid, {}))
 
     def write_expense(self, user_id: str, expense: dict) -> None:
         self._ensure_replica(user_id)
@@ -54,8 +63,18 @@ class MemoryReplicaBackend(ReplicaStorageBackend):
 
     def get_group(self, user_id: str, gid: str) -> dict:
         self._ensure_replica(user_id)
-        return copy.deepcopy(self._replicas[user_id]["groups"].get(gid, {}))
+        return self._replicas[user_id]["groups"].get(gid, {})
+        #return copy.deepcopy(self._replicas[user_id]["groups"].get(gid, {}))
 
     def write_group(self, user_id: str, group: dict) -> None:
         self._ensure_replica(user_id)
         self._replicas[user_id]["groups"][group["gid"]] = group
+
+    def get_known_users(self, user_id) -> dict:
+        self._ensure_replica(user_id)
+        return self._replicas[user_id]["known_users"]
+        #return copy.deepcopy(self._replicas[user_id]["known_users"])
+
+    def write_known_users(self, user_id, known_id, known_name):
+        self._ensure_replica(user_id)
+        self._replicas[user_id]["known_users"][known_id] = known_name
