@@ -14,7 +14,7 @@ from balance_handler import BalanceHandler
 
 NUM_USERS = 10
 MAX_STEPS = 1000
-MAX_TEST_RUNS = 100
+MAX_TEST_RUNS = 10000
 EPS = 1e-6  # float comparisons
 
 backend = None
@@ -281,7 +281,7 @@ def run_test(seed: int, do_temp_cheks=False):
                 print(f"Affected users: {affected_users}")
                 print("State:")
                 pprint.pprint(new_state[uid])
-                return -1
+                return -1, errs
             #safety
             if do_temp_cheks:
                 ok, errs = check_temporal_properties(old_state[uid], new_state[uid])
@@ -292,7 +292,7 @@ def run_test(seed: int, do_temp_cheks=False):
                     pprint.pprint(old_state[uid])
                     print("New state:")
                     pprint.pprint(new_state[uid])
-                    return -1
+                    return -1, errs
     # final liveness
     do_final_merges()
     ok, err = check_all_replicas_the_same()
@@ -301,7 +301,7 @@ def run_test(seed: int, do_temp_cheks=False):
         print(err)
         print(users[0])
         print(users[1])
-    return True
+    return True, ""
 
 
 def merge_action(user1, user2):
@@ -512,7 +512,7 @@ if __name__ == "__main__":
         start = time.perf_counter()
 
         print(f"Running test {i+1}/{MAX_TEST_RUNS}...", end="\r")
-        result = run_test(seed=i, do_temp_cheks=args.do_temp_check)
+        result, errs = run_test(seed=i, do_temp_cheks=args.do_temp_check)
         if result == -1:
             error_found = True
             error_seed = i
@@ -537,18 +537,19 @@ if __name__ == "__main__":
         
         clear_replics([])
     
-    filename = f"Testlog_Users{NUM_USERS}_Steps{MAX_STEPS}_Runs{MAX_TEST_RUNS}.txt"
+    filename = f"Testlog_Users{NUM_USERS}_Steps{MAX_STEPS}_Runs{MAX_TEST_RUNS}_Temp_check{args.do_temp_check}.txt"
 
     if error_found:
         with open(filename, "w") as f:
             log_print(f"\nTests stopped due to error in seed {error_seed}")
+            log_print(f"Errors found: {errs}")
             log_print(f"To reproduce: run with seed={error_seed}")
             log_print(f"Completed {i}/{MAX_TEST_RUNS} tests before error")
     else:
         with open(filename, "w") as f:
 
             log_print(f"\n{'='*70}")
-            log_print(f"  Average Results over {MAX_TEST_RUNS} test runs")
+            log_print(f"  Average Results over {MAX_TEST_RUNS} test runs with temporal checks: {args.do_temp_check}")
             log_print(f"{'='*70}")
             
             log_print(f"\n Summary:")
