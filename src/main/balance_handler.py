@@ -1,5 +1,5 @@
 from data_handler import DataHandler
-from storage_provider import get_backend
+from storage_provider import get_backend, get_backend_type
 
 class BalanceHandler:
 
@@ -29,14 +29,33 @@ class BalanceHandler:
         group_member_cardinality = sum(value % 2 == 1 for value in group.get("members").values())
 
         balance = pays - owes - gifts_sent
-        if not group_member_cardinality == 0:
+        if not group_member_cardinality == 0 and group.get("members").get(user) % 2 == 1:
             gifts_received = group.get("gifts_received") / group_member_cardinality
             balance += gifts_received
-        else :
+        elif group_member_cardinality == 0:
             return (None, "There is no user left in the group. The total amount gifted to the group is " + str(group.get("gifts_received")) + ".")
 
         #balance = pays - owes - gifts_sent + gifts_received
         return (balance, "")
+    
+    @staticmethod
+    def get_balance_test(user: str, group, group_expenses):
+        balance = 0.0
+
+        pays = sum(expense["amount"] for expense in group_expenses if expense["payer"] == user)
+        owes = sum(expense["shares"].get(user, 0.0) for expense in group_expenses)
+        gifts_sent = group["gifts_sent"].get(user, 0.0)
+        
+        group_member_cardinality = sum(value % 2 == 1 for value in group.get("members").values()) # active members
+
+        balance = pays - owes - gifts_sent
+        if group_member_cardinality > 0 and group.get("members").get(user) % 2 == 1: # there are active members in the group and user is one of them
+            gifts_received = group.get("gifts_received") / group_member_cardinality
+            balance += gifts_received
+        elif group_member_cardinality == 0:
+            return (None, "There is no user left in the group. The total amount gifted to the group is " + str(group.get("gifts_received")) + ".")
+        return (balance, "")
+    
 
 
     @staticmethod
@@ -64,8 +83,7 @@ class BalanceHandler:
     @staticmethod
     def compute_gifts(group, balances):
         gifting_users = [
-            user for user, bal in balances.items()
-            if group.get("members").get(user) % 2 == 0 and group.get("members").get(user) > 0 and bal > 0
+            user for user, bal in balances.items() if group.get("members").get(user) % 2 == 0 and group.get("members").get(user) > 0 and bal > 0
         ]
         total_gifted = sum(balances[u] for u in gifting_users)
 
