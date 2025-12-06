@@ -188,7 +188,7 @@ CreateExpense ==
                 payer |-> actor,
                 amount |-> SumFunction(shares),
                 shares |-> shares,
-                acknowledged_shares |-> [u \in USERS |-> IF u = actor THEN TRUE ELSE FALSE],
+                acknowledged_shares |-> [u \in USERS |-> IF u = actor /\ shares[u] > 0 THEN TRUE ELSE FALSE],
                 deleted |-> FALSE ]
              newReplica ==
                [ replicas[rid] EXCEPT !.recordedExpenses = [@ EXCEPT ![eid] = newExpense] ]
@@ -228,7 +228,7 @@ RemoveExpenseFromGroup ==
         /\ IsMember(replicas[rid].groups[gid].members[actor])
         /\ replicas[rid].recordedExpenses[eid].group = gid
         /\ replicas[rid].recordedExpenses[eid].payer = actor
-        /\ LET newExpense == [ replicas[rid].recordedExpenses[eid] EXCEPT !.group = NO_GROUP, !.version = @ + 1, !.acknowledged_shares = [u \in USERS |-> IF u = actor THEN TRUE ELSE FALSE] ]
+        /\ LET newExpense == [ replicas[rid].recordedExpenses[eid] EXCEPT !.group = NO_GROUP, !.version = @ + 1, !.acknowledged_shares = [u \in USERS |-> IF u = actor /\ replicas[rid].recordedExpenses[eid].shares[u] > 0 THEN TRUE ELSE FALSE] ]
                newExpenses == [ replicas[rid].recordedExpenses EXCEPT ![eid] = newExpense ]
                newGroups == RecalcGifts(replicas[rid].groups, newExpenses)
                newReplica == [ replicas[rid] EXCEPT !.recordedExpenses = newExpenses,
@@ -253,7 +253,7 @@ ModifyExpenseParameters ==
         /\ LET newExpenses ==
                [ replicas[rid].recordedExpenses EXCEPT
                   ![eid].shares = shares,
-                  ![eid].acknowledged_shares = [u \in USERS |-> IF u = actor THEN TRUE ELSE FALSE],
+                  ![eid].acknowledged_shares = [u \in USERS |-> IF u = actor /\ shares[u] > 0 THEN TRUE ELSE FALSE],
                   ![eid].amount = SumFunction(shares),
                   ![eid].version = @ + 1 ]
              newGroups ==
@@ -293,6 +293,7 @@ AcknowledgeShare ==
     \E rid \in POSSIBLE_REPLICA_IDs :
         /\ ASSIGNED_REPLICA[actor] = rid
         /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+        /\ replicas[rid].recordedExpenses[eid].deleted = FALSE
         /\ replicas[rid].recordedExpenses[eid].group # NO_GROUP
         /\ IsMember(replicas[rid].groups[replicas[rid].recordedExpenses[eid].group].members[actor])
         /\ replicas[rid].recordedExpenses[eid].shares[actor] > 0
@@ -319,9 +320,15 @@ MergeExpense(expOwn, expOther) ==
       THEN expOwn
       ELSE IF expOwn = NO_EXPENSE /\ expOther # NO_EXPENSE
       THEN expOther
-      ELSE IF expOwn.version >= expOther.version
+      ELSE IF expOwn.version > expOther.version
       THEN expOwn
-      ELSE expOther
+      ELSE IF expOwn.version < expOther.version
+      THEN expOther
+      ELSE 
+        LET mergedAcknowledgedShares ==
+              [ u \in USERS |-> 
+                  expOwn.acknowledged_shares[u] \/ expOther.acknowledged_shares[u] ]
+        IN [ expOwn EXCEPT !.acknowledged_shares = mergedAcknowledgedShares ]
         \*LET mergedDeleted == expOwn.deleted \/ expOther.deleted
         \*    useOwnVersion == expOwn.version >= expOther.version
           \*  baseExp == IF useOwnVersion THEN expOwn ELSE expOther
@@ -433,6 +440,13 @@ Inv_GroupBalanceZero ==
               SumFunction([ u \in allUsers |-> Balance(u, gid, replicas[rid]) ])
         IN total + replicas[rid].groups[gid].totalGifted = 0
         
+Inv_OnlyPositiveSharesCanAcknowledge ==
+  \A rid \in POSSIBLE_REPLICA_IDs :
+    \A eid \in POSSIBLE_EXPENSE_IDs :
+      replicas[rid].recordedExpenses[eid] # NO_EXPENSE =>
+        LET e == replicas[rid].recordedExpenses[eid]
+        IN \A u \in USERS :
+             e.acknowledged_shares[u] = TRUE => e.shares[u] > 0
 
 
 Inv ==
@@ -440,6 +454,7 @@ Inv ==
   /\ Inv_Conservation_of_amount
   /\ Inv_ExpenseGroupExists
   /\ Inv_GroupBalanceZero
+  /\ Inv_OnlyPositiveSharesCanAcknowledge
 
            
 \* ----------------------------
@@ -497,6 +512,17 @@ NoDecreaseGroupMembersCounter ==
       /\ replicas'[rid].groups[gid] # NO_GROUP
       /\ replicas'[rid].groups[gid].members[u]
            >= replicas[rid].groups[gid].members[u]
+         
+NoDecreaseAcknowledgedSharesSameVersion ==
+  \A rid \in POSSIBLE_REPLICA_IDs :
+  \A eid \in POSSIBLE_EXPENSE_IDs :
+  \A u \in USERS :
+    /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+    \*/\ replicas'[rid].recordedExpenses[eid] # NO_EXPENSE this always exists by NoDecreaseExpenseVersion property
+    /\ replicas[rid].recordedExpenses[eid].version = replicas'[rid].recordedExpenses[eid].version
+    /\ replicas[rid].recordedExpenses[eid].acknowledged_shares[u] = TRUE
+    =>
+      replicas'[rid].recordedExpenses[eid].acknowledged_shares[u] = TRUE
            
 \*-----------------------------
 \* Safety
@@ -506,6 +532,9 @@ Safety_ExpenseVersionsNonDecreasing ==
   
 Safety_GroupMembersCounterNonDecreasing ==
   [] [ NoDecreaseGroupMembersCounter ]_{<<replicas, actionCounter>>}
+  
+Safety_AcknowledgedSharesNonDecreasingForSameVersion ==
+  [] [ NoDecreaseAcknowledgedSharesSameVersion ]_{<<replicas, actionCounter>>}
 
 
 \* ----------------------------
@@ -517,5 +546,5 @@ FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
 
 =============================================================================
 \* Modification History
-\* Last modified Sat Dec 06 12:55:18 CET 2025 by floyd
+\* Last modified Sat Dec 06 15:19:33 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd

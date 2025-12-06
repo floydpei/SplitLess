@@ -14,7 +14,7 @@ VARIABLES
 \* Records
 \* ----------------------------
 Group == [  members : [USERS -> Nat],
-            persumed_members : [USERS -> Nat] ]
+            invited_members : [USERS -> Nat] ]
             
 Replica == [id: POSSIBLE_REPLICA_IDs,
             group: Group]
@@ -26,7 +26,7 @@ Replica == [id: POSSIBLE_REPLICA_IDs,
 Init ==  
         /\ LET InitialGroup == 
             [members |-> [u \in USERS |-> 0],
-             persumed_members |-> [u \in USERS |-> IF u = INITIAL_MEMBER THEN 1 ELSE 0]] 
+             invited_members |-> [u \in USERS |-> IF u = INITIAL_MEMBER THEN 1 ELSE 0]] 
            IN /\ replicas = [rid \in POSSIBLE_REPLICA_IDs |-> [group |-> InitialGroup] ]
         
         \*replicas = [rid \in POSSIBLE_REPLICA_IDs
@@ -55,9 +55,9 @@ InviteMember ==
         /\ ASSIGNED_REPLICA[actor] = rid
         /\ IsMember(replicas[rid].group.members[actor])
         /\ ~IsMember(replicas[rid].group.members[newMember])
-        /\ ~IsMemberContender(replicas[rid].group.persumed_members[newMember])
+        /\ ~IsMemberContender(replicas[rid].group.invited_members[newMember])
         /\ LET newReplica ==
-            [replicas[rid] EXCEPT !.group.persumed_members[newMember] = @ + 1]
+            [replicas[rid] EXCEPT !.group.invited_members[newMember] = @ + 1]
             IN
                 /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
                 /\ actionCounter' = actionCounter + 1
@@ -66,10 +66,10 @@ AcceptInvitation ==
     \E actor \in USERS :
     \E rid \in POSSIBLE_REPLICA_IDs :
         /\ ASSIGNED_REPLICA[actor] = rid
-        /\ IsMemberContender(replicas[rid].group.persumed_members[actor])
+        /\ IsMemberContender(replicas[rid].group.invited_members[actor])
         /\ LET newReplica ==
             [replicas[rid] EXCEPT 
-                !.group.persumed_members[actor] = @ + 1,
+                !.group.invited_members[actor] = @ + 1,
                 !.group.members[actor] = @ + 1 ]
             IN
                 /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
@@ -99,11 +99,11 @@ MergeReplicas ==
                 [u \in USERS |-> CHOOSE n \in {replicas[ownRid].group.members[u], replicas[otherRid].group.members[u]} :
                                             n >= replicas[ownRid].group.members[u] /\ n >= replicas[otherRid].group.members[u] ]
             merged_persumed_membrs ==
-                [u \in USERS |-> CHOOSE n \in {replicas[ownRid].group.persumed_members[u], replicas[otherRid].group.persumed_members[u]} :
-                                            n >= replicas[ownRid].group.persumed_members[u] /\ n >= replicas[otherRid].group.persumed_members[u] ]
+                [u \in USERS |-> CHOOSE n \in {replicas[ownRid].group.invited_members[u], replicas[otherRid].group.invited_members[u]} :
+                                            n >= replicas[ownRid].group.invited_members[u] /\ n >= replicas[otherRid].group.invited_members[u] ]
             merged_group ==
                 [replicas[ownRid].group EXCEPT !.members = merged_members,
-                                               !.persumed_members = merged_persumed_membrs]                                
+                                               !.invited_members = merged_persumed_membrs]                                
            IN /\ replicas' = [replicas EXCEPT ![ownRid].group = merged_group]
               /\ UNCHANGED actionCounter
                                             
@@ -136,7 +136,7 @@ AllReplicasHaveAtLeastGroupMemberCounter(user, member_counter) ==
         
 AllReplicasHaveAtLeastGroupPersumedMemberCounter(user, persumend_member_counter) ==
     \A rid \in POSSIBLE_REPLICA_IDs :
-        /\ replicas[rid].group.persumed_members[user] >= persumend_member_counter
+        /\ replicas[rid].group.invited_members[user] >= persumend_member_counter
         
 \* ----------------------------
 \* Liveness
@@ -149,7 +149,7 @@ Liveness_GroupMemberShipPropagates ==
 Liveness_PersumedGroupMemberShipPropagates ==
     \A rid \in POSSIBLE_REPLICA_IDs :
         \A user \in USERS:
-                []<> AllReplicasHaveAtLeastGroupPersumedMemberCounter(user, replicas[rid].group.persumed_members[user])
+                []<> AllReplicasHaveAtLeastGroupPersumedMemberCounter(user, replicas[rid].group.invited_members[user])
 
 
 \*-----------------------------
@@ -162,15 +162,15 @@ MemberOnlyAfterInvitation ==
     /\ ~IsMember(replicas[rid].group.members[u])
     /\ IsMember(replicas'[rid].group.members[u])
     =>
-      /\ IsMemberContender(replicas[rid].group.persumed_members[u])
+      /\ IsMemberContender(replicas[rid].group.invited_members[u])
       
 NoDecreaseMembershipCounters ==
   \A rid \in POSSIBLE_REPLICA_IDs :
   \A u \in USERS :
        replicas'[rid].group.members[u] 
           >= replicas[rid].group.members[u]
-    /\ replicas'[rid].group.persumed_members[u] 
-          >= replicas[rid].group.persumed_members[u]
+    /\ replicas'[rid].group.invited_members[u] 
+          >= replicas[rid].group.invited_members[u]
 
 \*-----------------------------
 \* Safety
