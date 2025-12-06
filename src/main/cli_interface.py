@@ -116,6 +116,12 @@ class CLIInterface:
                     print(self.cmd_expense_add_to_group(args))
                 elif cmd == "expense-remove-from-group":
                     print(self.cmd_expense_remove_from_group(args))
+                elif cmd == "expense-acknowledge":
+                    print(self.cmd_expense_acknowledge(args))
+                elif cmd == "expense-pending-acknowledgments":
+                    print(self.cmd_expense_pending_acknowledgments())
+                elif cmd == "group-expenses":
+                    print(self.cmd_group_expenses(args))
                 elif cmd == "group-balance":
                     print(self.cmd_group_balance(args))
                 elif cmd == "clear":
@@ -136,40 +142,43 @@ class CLIInterface:
 
     def print_help(self):
         print("""
-Available commands:
-  show all                          - Show full replica
-  show groups                       - Show all groups
-  show expenses                     - Show all expenses
-  show users                        - Show all known users
-  group-create <name>               - Create a new group
-  group-add-member <group> <user>   - Add user to group (name or id)
-  group-invite <group> <user>       - Invite a user into a group
-  group-accept <group>              - Accept an invitation
-  group-invitations                 - List your open invitations
+    Available commands:
+    show all                          - Show full replica
+    show groups                       - Show all groups
+    show expenses                     - Show all expenses
+    show users                        - Show all known users
+    group-create <name>               - Create a new group
+    group-add-member <group> <user>   - Add user to group (name or id)
+    group-invite <group> <user>       - Invite a user into a group
+    group-accept <group>              - Accept an invitation
+    group-invitations                 - List your open invitations
 
-  group-leave <group>               - Leave a group
-  group-suggest-payer <group>       - Suggest the next payer (lowest balance)
-  group-balance <group> <user>      - Show your balance with a user in a group
+    group-leave <group>               - Leave a group
+    group-suggest-payer <group>       - Suggest the next payer (lowest balance)
+    group-balance <group> <user>      - Show your balance with a user in a group
+    group-expenses <group>             - List all expenses in a group
 
-  expense-create <name> <payer_share>:<amount> [<other_share>:<amount> ...]
-                                    - Create a new expense
-  expense-delete <expense>          - Delete an expense
-  expense-modify <expense> <user>:<share> ...
-                                    - Modify expense shares
-  expense-add-to-group <expense> <group>
-                                    - Add expense to a group
-  expense-remove-from-group <expense>
-                                    - Remove expense from its group
+    expense-create <name> <payer_share>:<amount> [<other_share>:<amount> ...]
+                                        - Create a new expense
+    expense-delete <expense>          - Delete an expense
+    expense-modify <expense> <user>:<share> ...
+                                        - Modify expense shares
+    expense-add-to-group <expense> <group>
+                                        - Add expense to a group
+    expense-remove-from-group <expense>
+                                        - Remove expense from its group
+    expense-acknowledge <expense>     - Acknowledge your share in an expense
+    expense-pending-acknowledgments   - List expenses awaiting your acknowledgment
 
-  --- Replica Sync Commands ---
-  sync-start [port]                 - Start listening for replica sync
-  sync-stop                         - Stop the replica sync listener
-  sync-address                      - Show this replica's address
-  sync-send <host> <port>           - Send your full replica to a peer
-  sync-request <host> <port>        - Request a replica from a peer
+    --- Replica Sync Commands ---
+    sync-start [port]                 - Start listening for replica sync
+    sync-stop                         - Stop the replica sync listener
+    sync-address                      - Show this replica's address
+    sync-send <host> <port>           - Send your full replica to a peer
+    sync-request <host> <port>        - Request a replica from a peer
 
-  exit / quit                       - Exit CLI
-""")
+    exit / quit                       - Exit CLI
+    """)
 
     def cmd_sync_address(self):
         addr = ReplicaSync.address()
@@ -247,9 +256,9 @@ Available commands:
         groups = replica.get("groups", {})
         return_str = "Pending invitations:\n"
         for gid, g in groups.items():
-            persumed = g.get("persumed_members", {})
+            persumed = g.get("invited_members", {})
             if persumed.get(self.user_id, 0) % 2 == 1:  # contender
-                return_str.append((f"  - {g['name']} (id: {gid})\n"))
+                return_str += f"  - {g['name']} (id: {gid})\n"
         return return_str
 
 
@@ -335,6 +344,54 @@ Available commands:
         eid = self._resolve_entity("expense", args[0])
         if eid:
             return ExpenseHandler.remove_expense_from_group(self.user_id, eid)[1]
+        
+    def cmd_expense_acknowledge(self, args):
+        if len(args) < 1:
+            return "Usage: expense-acknowledge <expense>"
+        eid = self._resolve_entity("expense", args[0])
+        if eid:
+            status, msg = ExpenseHandler.acknowledge_share(self.user_id, eid)
+            return msg
+        return ""
+
+    def cmd_expense_pending_acknowledgments(self):
+        backend = get_backend()
+        replica = backend.get_full_replica(self.user_id)
+        expenses = replica.get("recorded_expenses", {})
+        groups = replica.get("groups", {})
+        
+        pending = []
+        
+        for eid, expense in expenses.items():
+            if not expense:
+                continue
+            gid = expense.get("group")
+            if not gid:
+                continue
+            group = groups.get(gid)
+            if not group or not GroupHandler.is_member(self.user_id, group):
+                continue
+            if expense.get("shares", {}).get(self.user_id, 0) <= 0:
+                continue
+            if expense.get("acknowledged_shares", {}).get(self.user_id, False):
+                continue
+            if expense.get("deleted", False):
+                continue
+            
+            pending.append((eid, expense))
+        
+        if not pending:
+            return "No expenses pending acknowledgment."
+        
+        result = "Expenses pending your acknowledgment:\n"
+        for eid, expense in pending:
+            group_name = groups[expense["group"]]["name"]
+            your_share = expense["shares"][self.user_id]
+            result += f"  - {expense['name']} (id: {eid}) in group '{group_name}'\n"
+            result += f"    Your share: {your_share:.2f} of {expense['amount']:.2f}\n"
+            result += f"    Payer: {expense['payer']}\n"
+        
+        return result
 
     def cmd_group_balance(self, args):
         if len(args) < 2:
@@ -349,3 +406,48 @@ Available commands:
 
     def cmd_clear(self):
         os.system('cls' if os.name == 'nt' else 'clear')
+
+    def cmd_group_expenses(self, args):
+        if len(args) < 1:
+            return "Usage: group-expenses <group>"
+
+        gid = self._resolve_entity("group", args[0])
+        if not gid:
+            return ""
+
+        backend = get_backend()
+        replica = backend.get_full_replica(self.user_id)
+
+        groups = replica.get("groups", {})
+        expenses = replica.get("recorded_expenses", {})
+
+        if gid not in groups:
+            return f"Group '{args[0]}' not found."
+
+        group = groups[gid]
+        group_name = group.get("name", gid)
+
+        group_expenses = [
+            (eid, e) for eid, e in expenses.items()
+            if e.get("group") == gid and not e.get("deleted", False)
+        ]
+
+        if not group_expenses:
+            return f"No expenses found in group '{group_name}'."
+
+        out = f"Expenses in group '{group_name}':\n"
+
+        for eid, e in group_expenses:
+            payer = replica.get("known_users", {}).get(e.get("payer"), e.get("payer"))
+            amount = e.get("amount", 0)
+            name = e.get("name")
+            out += f"\n  - {name} (id: {eid})\n"
+            out += f"      Amount: {amount:.2f}\n"
+            out += f"      Payer:  {payer}\n"
+            out += f"      Shares:\n"
+            for uid, share in e.get("shares", {}).items():
+                uname = replica.get("known_users", {}).get(uid, uid)
+                out += f"          {uname}: {share:.2f}\n"
+
+        return out
+

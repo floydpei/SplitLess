@@ -16,9 +16,11 @@ class Expense:
     amount: float
     deleted: bool
     shares: Dict[str, float] = field(default_factory=dict)
+    acknowledged_shares: Dict[str, float] = field(default_factory=dict)
 
     def __str__(self):
         shares_str = ", ".join([f"{uid}: {share:.2f}" for uid, share in self.shares.items()]) or "None"
+        acknowledged_shares_str = ", ".join([f"{uid}: {share:.2f}" for uid, share in self.acknowledged_shares.items()]) or "None"
         deleted_str = "Yes" if self.deleted else "No"
         return (
             f"Expense '{self.name}' (id={self.eid})\n"
@@ -27,7 +29,8 @@ class Expense:
             f"  Payer: {self.payer}\n"
             f"  Amount: {self.amount:.2f}\n"
             f"  Deleted: {deleted_str}\n"
-            f"  Shares: {shares_str}"
+            f"  Shares: {shares_str}\n"
+            f"  Acknowledged shares: {acknowledged_shares_str}"
         )
 
     @classmethod
@@ -47,14 +50,14 @@ class ExpenseHandler:
         version = 0
         amount = sum(shares.values())
         deleted = False
-
+        acknowledged_shares = {user: False for user, share in shares.items() if share > 0.0}    
         for share in shares.values():
             if share < 0:
                 return (-1, "[ExpenseHandler] The shares of an expense have to be non negative.")
         if amount == 0:
             return (-1 , "[ExpenseHandler] The amount of an expense has to be greater than 0.")
         
-        new_expense = Expense(eid, name, group, version, payer, amount, deleted, shares)
+        new_expense = Expense(eid, name, group, version, payer, amount, deleted, shares, acknowledged_shares)
         expense_as_dict = asdict(new_expense)
         #print(expense_as_dict)
         backend.write_expense(payer, expense_as_dict)
@@ -130,6 +133,7 @@ class ExpenseHandler:
         
         expense["group"] = None
         expense["version"] += 1
+        expense["acknowledged_shares"] = {user : False for user in expense.get("shares") if expense.get("shares")[user] > 0.0}
         backend.write_expense(actor, expense)
         BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
         return (1, "[ExpenseHandler] Succesfully removed expense " + eid + " from group " + gid)
@@ -162,8 +166,34 @@ class ExpenseHandler:
         expense["shares"] = shares
         expense["amount"] = amount
         expense["version"] += 1
+        expense["acknowledged_shares"] = {user : False for user in shares if shares[user] > 0.0}
         backend.write_expense(actor, expense)
         if gid:
             BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
         return (1, "[ExpenseHandler] Succesfully modified expense " + eid)
+    
+    @staticmethod
+    def acknowledge_share(actor: str, eid: str,):
+        backend = get_backend()
+        expense = backend.get_expense(actor, eid)
+        if not expense:
+            return (-1, "[ExpenseHandler] The expense with id " + eid + " does not exist on user " + actor + " replica.")
+        if expense["deleted"]:
+            return (-1, "[ExpenseHandler] The expense " + eid + " is deleted and you can no longer acknowledge you shares.")
+        gid = expense.get("group")
+        if not gid:
+            return (-1, "[ExpenseHandler] The expense with id " + eid + " is not in a group and therefore the user " + actor + " cannot acknowledge their shares")
+        group = backend.get_group(actor, gid)
+        if not GroupHandler.is_member(actor, group):
+            return (-1, "[ExpenseHandler] User " + actor + " is not member of the group " + gid)
+        if expense["acknowledged_shares"].get(actor, False):
+            return (-1, "[ExpenseHandler] User " + actor + " already acknowledged their share.")
+        if not expense["shares"].get(actor, 0) > 0:
+            return (-1, "[ExpenseHandler] User " + actor + " does not have any positive shares in the expense " + eid)
+
+        expense["acknowledged_shares"][actor] = True
+        #expense["version"] += 1
+        backend.write_expense(actor, expense)
+        BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
+        return (1, "[ExpenseHandler] Succesfully acknowledged share of user " + actor)
         

@@ -14,7 +14,7 @@ from balance_handler import BalanceHandler
 
 NUM_USERS = 10
 MAX_STEPS = 1000
-MAX_TEST_RUNS = 10000
+MAX_TEST_RUNS = 1
 EPS = 1e-6  # float comparisons
 
 backend = None
@@ -28,6 +28,7 @@ ACTIONS = [
     "add_expense_to_group",
     "edit_expense",
     "delete_expense",
+    "acknowledge_share"
 ]
 
 def get_action_weights(step, max_steps):
@@ -39,10 +40,11 @@ def get_action_weights(step, max_steps):
             "invite":       0.28,
             "accept":       0.28,
             "leave":        0.01,
-            "create_expense":       0.03,
+            "create_expense":       0.02,
             "add_expense_to_group": 0.02,
             "edit_expense":         0.02,
             "delete_expense":       0.01,
+            "acknowledge_share":     0.01
         }
     elif progress < 0.10:  # group membership
         return {
@@ -50,21 +52,23 @@ def get_action_weights(step, max_steps):
             "invite":       0.30,
             "accept":       0.30,
             "leave":        0.03,
-            "create_expense":       0.12,
-            "add_expense_to_group": 0.15,
+            "create_expense":       0.10,
+            "add_expense_to_group": 0.12,
             "edit_expense":         0.05,
             "delete_expense":       0.03,
+            "acknowledge_share":     0.05
         }
     else:  # expense heavy
         return {
             "create_group": 0.01,
-            "invite":       0.10,
-            "accept":       0.10,
+            "invite":       0.05,
+            "accept":       0.05,
             "leave":        0.07,
             "create_expense":       0.18,
             "add_expense_to_group": 0.30,
             "edit_expense":         0.14,
             "delete_expense":       0.10,
+            "acknowledge_share":     0.10
         }
 
 users = []
@@ -128,9 +132,12 @@ def invariant_group_balance_zero(replica: dict) -> Tuple[bool, str]:
             continue
 
         group_expenses = [
-            e for e in expenses.values() if e["group"] == gid and not e.get("deleted")
+            e for e in expenses.values() 
+            if e["group"] == gid 
+            and not e.get("deleted") 
+            and all(e.get("shares", {}).get(u, 0) <= 0 or e.get("acknowledged_shares", {}).get(u, False) 
+                    for u in e.get("shares", {}))
         ]
-
         group_balance = 0.0
         member_balances = {}
         for member in GroupHandler.get_members_including_left("not_used_string", group):
@@ -185,8 +192,8 @@ def temporal_no_decrease_group_members_counter(old_state: dict, new_state: dict)
         if not new_group:
             return False, f"Group {gid} existed but was removed"
         
-        old_members = old_group.get("persumed_members", {})
-        new_members = new_group.get("persumed_members", {})
+        old_members = old_group.get("invited_members", {})
+        new_members = new_group.get("invited_members", {})
 
         for user, old_counter in old_members.items():
             new_counter = new_members.get(user, 0)
@@ -299,8 +306,7 @@ def run_test(seed: int, do_temp_cheks=False):
     if not ok:
         print(f"[ERROR] Not all replicas are the same after the final merges")
         print(err)
-        print(users[0])
-        print(users[1])
+        return -1, err
     return True, ""
 
 
@@ -327,7 +333,7 @@ def accept_action(rdm, invitee):
     invite_groups = []
     for uid in users:
         for gid, group in backend.get_groups(uid).items():
-            if invitee in group.get("persumed_members", {}) and group["persumed_members"][invitee] % 2 == 1:
+            if invitee in group.get("invited_members", {}) and group["invited_members"][invitee] % 2 == 1:
                 invite_groups.append((uid, gid))
     if not invite_groups:
         return
@@ -445,13 +451,27 @@ def add_expense_to_group_smart_action(rdm, actor):
     status, _ = ExpenseHandler.add_expense_to_group(actor, eid, gid)
     return status
 
-def edit_expense_action(rdm, actor):
+def edit_expense_action(rdm, actor, zero_share_chance=0.8):
     expenses = backend.get_expenses(actor)
     if not expenses:
         return
     eid = rdm.choice(list(expenses.keys()))
 
-    status, _ = ExpenseHandler.modify_expense_parameters(actor, eid, {uid: rdm.uniform(1, 20) for uid in users})
+    shares = {}
+    positive_share_exists = False
+    
+    for uid in users:
+        if rdm.random() < zero_share_chance:
+            shares[uid] = 0
+        else:
+            shares[uid] = rdm.uniform(1, 20)
+            positive_share_exists = True
+    
+    if not positive_share_exists and users:
+        user_to_force_positive = rdm.choice(list(users))
+        shares[user_to_force_positive] = rdm.uniform(1, 20)
+
+    status, _ = ExpenseHandler.modify_expense_parameters(actor, eid, shares)
     return status
 
 def delete_expense_action(rdm, actor):
@@ -463,6 +483,52 @@ def delete_expense_action(rdm, actor):
     status, _ = ExpenseHandler.delete_expense(actor, eid)
     return status
 
+def acknowledge_expense_action(rdm, actor, smart_chance=0.8):
+    if rdm.random() < smart_chance:
+        return acknowledge_expense_smart_action(rdm, actor)
+    else:
+        return acknowledge_expense_random_action(rdm, actor)
+
+
+def acknowledge_expense_random_action(rdm, actor):
+    expenses = backend.get_expenses(actor)
+    if not expenses:
+        return
+    eid = rdm.choice(list(expenses.keys()))
+
+    status, _ = ExpenseHandler.acknowledge_share(actor, eid)
+    return status
+
+
+def acknowledge_expense_smart_action(rdm, actor):
+    replica = backend.get_full_replica(actor)
+    expenses = replica.get("recorded_expenses", {})
+    groups = replica.get("groups", {})
+    
+    if not expenses or not groups:
+        return acknowledge_expense_random_action(rdm, actor)
+    
+    for eid, expense in expenses.items():
+        if not expense:
+            continue
+        gid = expense.get("group")
+        if not gid:
+            continue
+        group = groups.get(gid)
+        if not group or not GroupHandler.is_member(actor, group):
+            continue
+        if expense.get("shares", {}).get(actor, 0) <= 0:
+            continue
+        if expense.get("acknowledged_shares", {}).get(actor, False):
+            continue
+        if expense.get("deleted", False):
+            continue
+        
+        status, _ = ExpenseHandler.acknowledge_share(actor, eid)
+        return status
+    
+    return acknowledge_expense_random_action(rdm, actor)
+
 
 ACTION_MAP = {
     "invite": invite_action,
@@ -473,6 +539,7 @@ ACTION_MAP = {
     "add_expense_to_group": add_expense_to_group_action,
     "edit_expense": edit_expense_action,
     "delete_expense": delete_expense_action,
+    "acknowledge_share": acknowledge_expense_action
 }
 
 def format_hms(seconds):

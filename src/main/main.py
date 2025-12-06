@@ -11,6 +11,7 @@ def handle_startup():
     backend = get_backend()
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Welcome to SplitLess CLI")
+    user_id = ""
 
     while True:
         print("\nOptions: \n1. Login\n2. Register\n3. Exit")
@@ -36,9 +37,10 @@ def handle_startup():
     if not replica_data:
         replica_data = {
             "recorded_expenses": {},
-            "groups": {}
+            "groups": {},
+            "known_users" : {user_id: username}
         }
-        backend.write_full_replica(replica_data)
+        backend.write_full_replica(user_id, replica_data)
 
     print(f"Replica loaded for {username}. You can now start using the app.")
     return user_id

@@ -11,18 +11,18 @@ class Group:
     name: str
     gifts_received: int
     members: Dict[str, int] = field(default_factory=dict) # cls
-    persumed_members: Dict[str, int] = field(default_factory=dict) # cls
+    invited_members: Dict[str, int] = field(default_factory=dict) # cls
     gifts_sent: Dict[str, float] = field(default_factory=dict)
 
     def __str__(self):
         members_str = ", ".join([f"{uid}:{cls}" for uid, cls in self.members.items()]) or "None"
-        persumed_members_str = ", ".join([f"{uid}:{cls}" for uid, cls in self.persumed_members.items()]) or "None"
+        invited_members_str = ", ".join([f"{uid}:{cls}" for uid, cls in self.invited_members.items()]) or "None"
         gifts_sent_str = ", ".join([f"{uid}:{amt:.2f}" for uid, amt in self.gifts_sent.items()]) or "None"
         return (
             f"Group '{self.name}' (id={self.gid})\n"
             f"  Gifts received: {self.gifts_received}\n"
             f"  Members (cls): {members_str}\n"
-            f"  Persumed members (cls): {persumed_members_str}\n"
+            f"  Persumed members (cls): {invited_members_str}\n"
             f"  Gifts sent: {gifts_sent_str}"
         )
     
@@ -44,8 +44,8 @@ class GroupHandler:
     
     @staticmethod
     def is_member_contender(actor, group):
-        if actor not in group.get("persumed_members"): return False
-        return group.get("persumed_members").get(actor) % 2 == 1
+        if actor not in group.get("invited_members"): return False
+        return group.get("invited_members").get(actor) % 2 == 1
     
     @staticmethod
     def get_members(actor: str, group: Group): 
@@ -98,10 +98,10 @@ class GroupHandler:
         backend = get_backend()
         gid = str(uuid.uuid4())[:8]
         members = {creator: 1}
-        persumed_members = {creator: 2}
+        invited_members = {creator: 2}
         gifts_received = 0
 
-        new_group = Group(gid=gid, name=name, members=members, persumed_members=persumed_members, gifts_received=gifts_received)
+        new_group = Group(gid=gid, name=name, members=members, invited_members=invited_members, gifts_received=gifts_received)
         group_as_dict = asdict(new_group)
         #print(group_as_dict)
         backend.write_group(creator, group_as_dict)
@@ -149,7 +149,7 @@ class GroupHandler:
         if GroupHandler.is_member_contender(new_member, group):
             return (-1, "[GroupHandler] User with id " + new_member + " is already invided to the group")
         
-        group.get("persumed_members")[new_member] = group.get("persumed_members").get(new_member, 0) + 1
+        group.get("invited_members")[new_member] = group.get("invited_members").get(new_member, 0) + 1
         backend.write_group(actor, group)
         return (1, "[GroupHandler] Succesfully invited user " + new_member + " to the group " + gid + ".")
     
@@ -160,13 +160,13 @@ class GroupHandler:
         if not group:
             return (-1 , "[GroupHandler] Group with " + gid + " does not exist on users " + actor + " replica")
         members = group.get("members")
-        persumed_members = group.get("persumed_members")
+        invited_members = group.get("invited_members")
         if GroupHandler.is_member(actor, group):
             return (-1, "[GroupHandler] User " + actor + " is already a member of the group " + gid)
         if not GroupHandler.is_member_contender(actor, group):
             return (-1, "[GroupHandler] User " + actor + " has no active invitation to the group " + gid)
         members[actor] = members.get(actor, 0) + 1
-        persumed_members[actor] = persumed_members.get(actor, 0) + 1
+        invited_members[actor] = invited_members.get(actor, 0) + 1
         backend.write_group(actor, group)
         return (1, "[GroupHandler] User " + actor + " has is now a member of the group " + gid)
 

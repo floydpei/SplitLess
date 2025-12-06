@@ -130,10 +130,20 @@ class ReplicaSync:
             own_version = exp_own.get("version", 0)
             other_version = exp_other.get("version", 0)
         
-            if own_version >= other_version:
+            if own_version > other_version:
                 merged_expenses[eid] = exp_own
-            else:
+            elif own_version < other_version:
                 merged_expenses[eid] = exp_other
+            else:
+                merged_expenses[eid] = exp_own
+                merged_acknowleged_shares = {}
+                postive_user_shares = [user for user in exp_own.get("shares", {}) if exp_own.get("shares")[user] > 0]
+                for uid in postive_user_shares:
+                    merged_acknowleged_shares[uid] = (
+                        exp_own.get("acknowledged_shares", {}).get(uid, False) or 
+                        exp_other.get("acknowledged_shares", {}).get(uid, False)
+                    )
+                merged_expenses[eid]["acknowledged_shares"] = merged_acknowleged_shares
         
         return merged_expenses
 
@@ -166,18 +176,18 @@ class ReplicaSync:
             for uid in all_uids:
                 merged_members[uid] = max(own_members.get(uid, 0), other_members.get(uid, 0))
 
-            own_persumed_members = group_own.get("persumed_members")
-            other_persumed_members = group_other.get("persumed_members")
-            merged_persumed_members = {}
-            all_uids = set(own_persumed_members.keys()) | set(other_persumed_members.keys())
+            own_invited_members = group_own.get("invited_members")
+            other_invited_members = group_other.get("invited_members")
+            merged_invited_members = {}
+            all_uids = set(own_invited_members.keys()) | set(other_invited_members.keys())
 
             for uid in all_uids:
-                merged_persumed_members[uid] = max(own_persumed_members.get(uid, 0), other_persumed_members.get(uid, 0))
+                merged_invited_members[uid] = max(own_invited_members.get(uid, 0), other_invited_members.get(uid, 0))
 
             merged_group = {
                 **group_own,
                 "members": merged_members,
-                "persumed_members": merged_persumed_members
+                "invited_members": merged_invited_members
             }
             merged_groups[gid] = merged_group
 

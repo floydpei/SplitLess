@@ -20,7 +20,11 @@ class BalanceHandler:
         
         expenses = replica["recorded_expenses"]
         group_expenses = [
-            e for e in expenses.values() if e["group"] == gid and not e.get("deleted")
+            e for e in expenses.values() 
+            if e["group"] == gid 
+            and not e.get("deleted") 
+            and all(e.get("shares", {}).get(u, 0) <= 0 or e.get("acknowledged_shares", {}).get(u, False) 
+                    for u in e.get("shares", {}))
         ]
         pays = sum(expense["amount"] for expense in group_expenses if expense["payer"] == user)
         owes = sum(expense["shares"].get(user, 0.0) for expense in group_expenses)
@@ -73,7 +77,11 @@ class BalanceHandler:
         gid = group.get("gid")
         members = group.get("members").keys()
         group_expenses = [
-            e for e in expenses.values() if e["group"] == gid and not e.get("deleted")
+            e for e in expenses.values() 
+            if e["group"] == gid 
+            and not e.get("deleted") 
+            and all(e.get("shares", {}).get(u, 0) <= 0 or e.get("acknowledged_shares", {}).get(u, False) 
+                    for u in e.get("shares", {}))
         ]
         for member in members:
             balances[member] = BalanceHandler.compute_balance_group_expenses(member, group, group_expenses)

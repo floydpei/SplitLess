@@ -1,39 +1,59 @@
 {
   "recorded_expenses": {
-    "1ee0feda": {
-      "eid": "1ee0feda",
-      "name": "test",
-      "group": "e635a5a5",
-      "version": 6,
-      "payer": "c15ba962",
-      "amount": 2.0,
+    "80de9540": {
+      "eid": "80de9540",
+      "name": "rewe-foo",
+      "group": "da73fdf7",
+      "version": 1,
+      "payer": "e42c27ce",
+      "amount": 22.0,
       "deleted": false,
       "shares": {
-        "e42c27ce": 2.0
+        "c15ba962": 22.0
+      },
+      "acknowledged_shares": {
+        "c15ba962": true
+      }
+    },
+    "31d16399": {
+      "eid": "31d16399",
+      "name": "migro-foo",
+      "group": "da73fdf7",
+      "version": 1,
+      "payer": "c15ba962",
+      "amount": 14.0,
+      "deleted": false,
+      "shares": {
+        "c15ba962": 2.0,
+        "e42c27ce": 12.0
+      },
+      "acknowledged_shares": {
+        "c15ba962": true,
+        "e42c27ce": true
       }
     }
   },
   "groups": {
-    "e635a5a5": {
-      "gid": "e635a5a5",
+    "da73fdf7": {
+      "gid": "da73fdf7",
       "name": "foo",
       "gifts_received": 0,
       "members": {
-        "e42c27ce": 3,
-        "c15ba962": 1
+        "c15ba962": 3,
+        "e42c27ce": 1
       },
-      "persumed_members": {
-        "e42c27ce": 4,
-        "c15ba962": 2
+      "invited_members": {
+        "c15ba962": 4,
+        "e42c27ce": 2
       },
       "gifts_sent": {
-        "e42c27ce": 0.0,
-        "c15ba962": 0.0
+        "c15ba962": 0.0,
+        "e42c27ce": 0.0
       }
     }
   },
   "known_users": {
-    "e42c27ce": "bob",
-    "c15ba962": "alice"
+    "c15ba962": "alice",
+    "e42c27ce": "bob"
   }
 }
