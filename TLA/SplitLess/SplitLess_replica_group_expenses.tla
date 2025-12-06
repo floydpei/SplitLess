@@ -24,6 +24,7 @@ Expense ==
           payer : USERS,
           amount : Nat,
           shares : POSSIBLE_SHARES,
+          acknowledged_shares : [USERS -> BOOLEAN],
           deleted : BOOLEAN ]
 
 Group ==
@@ -60,7 +61,10 @@ GroupExpenseIds(gid, recordedExpensesIn) ==
   { eid \in POSSIBLE_EXPENSE_IDs :
       /\ recordedExpensesIn[eid] # NO_EXPENSE
       /\ recordedExpensesIn[eid].deleted = FALSE
-      /\ recordedExpensesIn[eid].group = gid }
+      /\ recordedExpensesIn[eid].group = gid 
+      /\ \A u \in DOMAIN recordedExpensesIn[eid].shares :
+           (recordedExpensesIn[eid].shares[u] > 0)
+             => recordedExpensesIn[eid].acknowledged_shares[u] = TRUE}
       
 IsMember(memberCounter) ==
   memberCounter % 2 = 1
@@ -176,7 +180,6 @@ CreateExpense ==
       \E rid \in POSSIBLE_REPLICA_IDs :
         /\ ASSIGNED_REPLICA[actor] = rid
         /\ SumFunction(shares) > 0
-        \* Ensure each eid is only used once across replicas, real app use pseudorandom functions or similar
         /\ \A otherRid \in POSSIBLE_REPLICA_IDs : replicas[otherRid].recordedExpenses[eid] = NO_EXPENSE
         /\ LET newExpense ==
               [ id |-> eid,
@@ -185,12 +188,12 @@ CreateExpense ==
                 payer |-> actor,
                 amount |-> SumFunction(shares),
                 shares |-> shares,
+                acknowledged_shares |-> [u \in USERS |-> IF u = actor THEN TRUE ELSE FALSE],
                 deleted |-> FALSE ]
              newReplica ==
                [ replicas[rid] EXCEPT !.recordedExpenses = [@ EXCEPT ![eid] = newExpense] ]
            IN /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
               /\ actionCounter' = actionCounter + 1
-              \*/\ UNCHANGED<<actionCounter>>
 
 AddExpenseToGroup ==
       \E actor \in USERS :
@@ -225,7 +228,7 @@ RemoveExpenseFromGroup ==
         /\ IsMember(replicas[rid].groups[gid].members[actor])
         /\ replicas[rid].recordedExpenses[eid].group = gid
         /\ replicas[rid].recordedExpenses[eid].payer = actor
-        /\ LET newExpense == [ replicas[rid].recordedExpenses[eid] EXCEPT !.group = NO_GROUP, !.version = @ + 1 ]
+        /\ LET newExpense == [ replicas[rid].recordedExpenses[eid] EXCEPT !.group = NO_GROUP, !.version = @ + 1, !.acknowledged_shares = [u \in USERS |-> IF u = actor THEN TRUE ELSE FALSE] ]
                newExpenses == [ replicas[rid].recordedExpenses EXCEPT ![eid] = newExpense ]
                newGroups == RecalcGifts(replicas[rid].groups, newExpenses)
                newReplica == [ replicas[rid] EXCEPT !.recordedExpenses = newExpenses,
@@ -250,6 +253,7 @@ ModifyExpenseParameters ==
         /\ LET newExpenses ==
                [ replicas[rid].recordedExpenses EXCEPT
                   ![eid].shares = shares,
+                  ![eid].acknowledged_shares = [u \in USERS |-> IF u = actor THEN TRUE ELSE FALSE],
                   ![eid].amount = SumFunction(shares),
                   ![eid].version = @ + 1 ]
              newGroups ==
@@ -274,7 +278,27 @@ DeleteExpense ==
            THEN /\ IsMember(replicas[rid].groups[replicas[rid].recordedExpenses[eid].group].members[actor])
            ELSE TRUE
         /\ LET newExpenses ==
-               [ replicas[rid].recordedExpenses EXCEPT ![eid].deleted = TRUE ]
+               [ replicas[rid].recordedExpenses EXCEPT ![eid].deleted = TRUE, ![eid].version = @ + 1 ]
+             newGroups ==
+               RecalcGifts(replicas[rid].groups, newExpenses)
+             newReplica ==
+               [ replicas[rid] EXCEPT !.recordedExpenses = newExpenses,
+                                      !.groups = newGroups ]
+           IN /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
+              /\ actionCounter' = actionCounter + 1
+              
+AcknowledgeShare ==
+    \E actor \in USERS :
+    \E eid \in POSSIBLE_EXPENSE_IDs :
+    \E rid \in POSSIBLE_REPLICA_IDs :
+        /\ ASSIGNED_REPLICA[actor] = rid
+        /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+        /\ replicas[rid].recordedExpenses[eid].group # NO_GROUP
+        /\ IsMember(replicas[rid].groups[replicas[rid].recordedExpenses[eid].group].members[actor])
+        /\ replicas[rid].recordedExpenses[eid].shares[actor] > 0
+        /\ replicas[rid].recordedExpenses[eid].acknowledged_shares[actor] = FALSE
+        /\ LET newExpenses ==
+               [ replicas[rid].recordedExpenses EXCEPT ![eid].acknowledged_shares[actor] = TRUE ]
              newGroups ==
                RecalcGifts(replicas[rid].groups, newExpenses)
              newReplica ==
@@ -295,16 +319,18 @@ MergeExpense(expOwn, expOther) ==
       THEN expOwn
       ELSE IF expOwn = NO_EXPENSE /\ expOther # NO_EXPENSE
       THEN expOther
-      ELSE
-        LET mergedDeleted == expOwn.deleted \/ expOther.deleted
-            useOwnVersion == expOwn.version >= expOther.version
-            baseExp == IF useOwnVersion THEN expOwn ELSE expOther
-            mergedGroup == baseExp.group
+      ELSE IF expOwn.version >= expOther.version
+      THEN expOwn
+      ELSE expOther
+        \*LET mergedDeleted == expOwn.deleted \/ expOther.deleted
+        \*    useOwnVersion == expOwn.version >= expOther.version
+          \*  baseExp == IF useOwnVersion THEN expOwn ELSE expOther
+            \*mergedGroup == baseExp.group
               \*IF expOwn.group # NO_GROUP THEN expOwn.group ELSE expOther.group
-        IN [ baseExp EXCEPT
-              !.deleted = mergedDeleted,
-              !.group = mergedGroup,
-              !.version = IF useOwnVersion THEN expOwn.version ELSE expOther.version ]
+       \* IN [ baseExp EXCEPT
+         \*     !.deleted = mergedDeleted,
+           \*   !.group = mergedGroup,
+             \* !.version = IF useOwnVersion THEN expOwn.version ELSE expOther.version ]
 
 
 MergeGroup(grpOwn, grpOther, mergedExpenses, gid) ==
@@ -362,6 +388,7 @@ Next ==
     \/ RemoveExpenseFromGroup
     \/ ModifyExpenseParameters
     \/ DeleteExpense
+    \/ AcknowledgeShare
     \/ MergeReplicas
     \/ UNCHANGED <<replicas, actionCounter>>
 
@@ -490,5 +517,5 @@ FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
 
 =============================================================================
 \* Modification History
-\* Last modified Mon Dec 01 13:41:59 CET 2025 by floyd
+\* Last modified Sat Dec 06 12:55:18 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd
