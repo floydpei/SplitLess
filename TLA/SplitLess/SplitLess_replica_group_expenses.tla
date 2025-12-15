@@ -23,7 +23,8 @@ Expense ==
           version : Nat,  \* current version of expense, only payer can edit expense and each user only works on at most one replica, a simple grow only counter is sufficient
           payer : USERS,
           amount : Nat,
-          shares : POSSIBLE_SHARES,
+          \*shares : POSSIBLE_SHARES,
+          shares : [USERS -> Nat], \* if payer absorbs the share of a left member, their share can be higher than the max in POSSIBLE_SHARES
           acknowledged_shares : [USERS -> BOOLEAN],
           deleted : BOOLEAN ]
 
@@ -306,7 +307,70 @@ AcknowledgeShare ==
                [ replicas[rid] EXCEPT !.recordedExpenses = newExpenses,
                                       !.groups = newGroups ]
            IN /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
-              /\ actionCounter' = actionCounter + 1
+              \*/\ actionCounter' = actionCounter + 1
+              /\ UNCHANGED actionCounter
+                    
+              
+\* Payer absorbs share of a member who left and never acknowledged
+PayerAbsorbsLeftMemberShare ==
+    \E actor \in USERS :
+    \E eid \in POSSIBLE_EXPENSE_IDs :
+    \E leftMember \in USERS :
+    \E rid \in POSSIBLE_REPLICA_IDs :
+        /\ ASSIGNED_REPLICA[actor] = rid
+        /\ actor # leftMember
+        /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+        /\ replicas[rid].recordedExpenses[eid].deleted = FALSE
+        /\ replicas[rid].recordedExpenses[eid].payer = actor
+        /\ replicas[rid].recordedExpenses[eid].shares[leftMember] > 0
+        /\ replicas[rid].recordedExpenses[eid].acknowledged_shares[leftMember] = FALSE
+        /\ replicas[rid].recordedExpenses[eid].group # NO_GROUP
+        /\ LET gid == replicas[rid].recordedExpenses[eid].group
+           IN /\ replicas[rid].groups[gid] # NO_GROUP
+              /\ IsMember(replicas[rid].groups[gid].members[actor])
+              /\ ~IsMember(replicas[rid].groups[gid].members[leftMember])
+              /\ WasEverMember(replicas[rid].groups[gid].members[leftMember])
+              /\ LET oldShares == replicas[rid].recordedExpenses[eid].shares
+                     leftShare == oldShares[leftMember]
+                     newShares == [ u \in USERS |-> 
+                         IF u = actor THEN oldShares[u] + leftShare
+                         ELSE IF u = leftMember THEN 0
+                         ELSE oldShares[u] ]
+                     newExpenses ==
+                       [ replicas[rid].recordedExpenses EXCEPT
+                          ![eid].shares = newShares,
+                          \*![eid].acknowledged_shares = [u \in USERS |-> 
+                            \*  IF u = leftMember THEN FALSE
+                              \*ELSE replicas[rid].recordedExpenses[eid].acknowledged_shares[u]],
+                          ![eid].version = @ + 1 ]
+                     newGroups == RecalcGifts(replicas[rid].groups, newExpenses)
+                     newReplica ==
+                       [ replicas[rid] EXCEPT !.recordedExpenses = newExpenses,
+                                              !.groups = newGroups ]
+                 IN /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
+                    /\ UNCHANGED actionCounter
+                    
+\* Alternative conflict resolution: member rejoins to acknowledge
+\* Follows the add member protocoll by having a group member reentering the rejoining one
+RejoinToAcknowledge ==
+    \E inviter, rejoiner \in USERS :
+    \E gid \in POSSIBLE_GROUP_IDs :
+    \E rid \in POSSIBLE_REPLICA_IDs :
+        /\ ASSIGNED_REPLICA[inviter] = rid
+        /\ replicas[rid].groups[gid] # NO_GROUP
+        /\ IsMember(replicas[rid].groups[gid].members[inviter])
+        /\ ~IsMember(replicas[rid].groups[gid].members[rejoiner])
+        /\ WasEverMember(replicas[rid].groups[gid].members[rejoiner])
+        /\ \E eid \in POSSIBLE_EXPENSE_IDs :
+             /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
+             /\ replicas[rid].recordedExpenses[eid].group = gid
+             /\ replicas[rid].recordedExpenses[eid].shares[rejoiner] > 0
+             /\ replicas[rid].recordedExpenses[eid].acknowledged_shares[rejoiner] = FALSE
+        /\ LET newReplica ==
+              [ replicas[rid] EXCEPT !.groups = 
+                  [@ EXCEPT ![gid].members[rejoiner] = @ + 1] ]
+           IN /\ replicas' = [replicas EXCEPT ![rid] = newReplica]
+              /\ UNCHANGED actionCounter
           
           
 \* ----------------------------
@@ -396,6 +460,8 @@ Next ==
     \/ ModifyExpenseParameters
     \/ DeleteExpense
     \/ AcknowledgeShare
+    \/ PayerAbsorbsLeftMemberShare
+    \/ RejoinToAcknowledge
     \/ MergeReplicas
     \/ UNCHANGED <<replicas, actionCounter>>
 
@@ -423,7 +489,7 @@ Inv_ExpenseGroupExists ==
   \A rid \in POSSIBLE_REPLICA_IDs :
     \A eid \in POSSIBLE_EXPENSE_IDs :
       /\ replicas[rid].recordedExpenses[eid] # NO_EXPENSE
-      /\ replicas[rid].recordedExpenses[eid].deleted = FALSE        \* remove this?
+      \*/\ replicas[rid].recordedExpenses[eid].deleted = FALSE        \* remove this?
       /\ replicas[rid].recordedExpenses[eid].group # NO_GROUP
       =>
          replicas[rid].groups[ replicas[rid].recordedExpenses[eid].group ] # NO_GROUP
@@ -439,14 +505,6 @@ Inv_GroupBalanceZero ==
             total ==
               SumFunction([ u \in allUsers |-> Balance(u, gid, replicas[rid]) ])
         IN total + replicas[rid].groups[gid].totalGifted = 0
-        
-Inv_OnlyPositiveSharesCanAcknowledge ==
-  \A rid \in POSSIBLE_REPLICA_IDs :
-    \A eid \in POSSIBLE_EXPENSE_IDs :
-      replicas[rid].recordedExpenses[eid] # NO_EXPENSE =>
-        LET e == replicas[rid].recordedExpenses[eid]
-        IN \A u \in USERS :
-             e.acknowledged_shares[u] = TRUE => e.shares[u] > 0
 
 
 Inv ==
@@ -454,7 +512,6 @@ Inv ==
   /\ Inv_Conservation_of_amount
   /\ Inv_ExpenseGroupExists
   /\ Inv_GroupBalanceZero
-  /\ Inv_OnlyPositiveSharesCanAcknowledge
 
            
 \* ----------------------------
@@ -469,6 +526,13 @@ AllReplicasHaveAtLeastGroupMemberCounter(gid, user, counter) ==
     \A rid \in POSSIBLE_REPLICA_IDs :
         /\ replicas[rid].groups[gid] # NO_GROUP
         /\ replicas[rid].groups[gid].members[user] >= counter
+        
+AllPositiveSharesAcknowledged(eid, replica) ==
+    \*replica.recordedExpenses[eid] = NO_EXPENSE
+    \*\/
+    \A u \in USERS :
+        replica.recordedExpenses[eid].shares[u] > 0 
+        => replica.recordedExpenses[eid].acknowledged_shares[u] = TRUE
   
 \* ----------------------------
 \* Liveness
@@ -489,6 +553,21 @@ Liveness_GroupMemberShipPropagates ==
             \A user \in USERS:
                 []<>(replicas[rid].groups[gid] # NO_GROUP
                         => AllReplicasHaveAtLeastGroupMemberCounter(gid, user, replicas[rid].groups[gid].members[user]) )
+                        
+\* Expenses in groups eventually resolve acknowledgment status
+\* Either all shares are acknowledged or the expense is deleted/removed, or all members leave
+Liveness_ExpenseSharesEventuallyAcknowledged ==
+    \A rid \in POSSIBLE_REPLICA_IDs :
+        \A eid \in POSSIBLE_EXPENSE_IDs :
+            []<>(
+                LET exp == replicas[rid].recordedExpenses[eid]
+                IN /\ exp # NO_EXPENSE
+                   /\ exp.group # NO_GROUP
+                   /\ ~exp.deleted
+                   => ( \/ AllPositiveSharesAcknowledged(eid, replicas[rid])
+                        \/ exp.deleted
+                        \/ exp.group = NO_GROUP
+                        \/ \A u \in USERS : ~IsMember(replicas[rid].groups[exp.group].members[u]) ) )
                         
 \*-----------------------------
 \* Safety Helper
@@ -542,9 +621,14 @@ Safety_AcknowledgedSharesNonDecreasingForSameVersion ==
 \* ----------------------------
 Spec == Init /\ [][Next]_<<replicas, actionCounter>> 
 
-FairSpec == Spec /\ WF_<<replicas, actionCounter>>(MergeReplicas)
+FairSpec == 
+    /\ Spec 
+    /\ WF_<<replicas, actionCounter>>(MergeReplicas)
+    /\ WF_<<replicas, actionCounter>>(AcknowledgeShare)
+    /\ WF_<<replicas, actionCounter>>(PayerAbsorbsLeftMemberShare)
+    /\ WF_<<replicas, actionCounter>>(RejoinToAcknowledge)
 
 =============================================================================
 \* Modification History
-\* Last modified Sat Dec 06 15:19:33 CET 2025 by floyd
+\* Last modified Sat Dec 13 12:46:34 CET 2025 by floyd
 \* Created Fri Oct 24 11:14:17 CEST 2025 by floyd
