@@ -12,9 +12,9 @@ from replica_sync import ReplicaSync
 from storage_provider import get_backend, use_memory_backend
 from balance_handler import BalanceHandler
 
-NUM_USERS = 10
+NUM_USERS = 5
 MAX_STEPS = 1000
-MAX_TEST_RUNS = 1
+MAX_TEST_RUNS = 100
 EPS = 1e-6  # float comparisons
 
 backend = None
@@ -28,7 +28,8 @@ ACTIONS = [
     "add_expense_to_group",
     "edit_expense",
     "delete_expense",
-    "acknowledge_share"
+    "acknowledge_share",
+    "payer_absorbs_left_member"
 ]
 
 def get_action_weights(step, max_steps):
@@ -44,7 +45,8 @@ def get_action_weights(step, max_steps):
             "add_expense_to_group": 0.02,
             "edit_expense":         0.02,
             "delete_expense":       0.01,
-            "acknowledge_share":     0.01
+            "acknowledge_share":     0.01,
+            "payer_absorbs_left_member":    0.00
         }
     elif progress < 0.10:  # group membership
         return {
@@ -56,19 +58,21 @@ def get_action_weights(step, max_steps):
             "add_expense_to_group": 0.12,
             "edit_expense":         0.05,
             "delete_expense":       0.03,
-            "acknowledge_share":     0.05
+            "acknowledge_share":     0.05,
+            "payer_absorbs_left_member":    0.00
         }
     else:  # expense heavy
         return {
             "create_group": 0.01,
             "invite":       0.05,
             "accept":       0.05,
-            "leave":        0.07,
-            "create_expense":       0.18,
-            "add_expense_to_group": 0.30,
-            "edit_expense":         0.14,
-            "delete_expense":       0.10,
-            "acknowledge_share":     0.10
+            "leave":        0.05,
+            "create_expense":       0.10,
+            "add_expense_to_group": 0.20,
+            "edit_expense":         0.09,
+            "delete_expense":       0.09,
+            "acknowledge_share":     0.24,
+            "payer_absorbs_left_member":    0.02
         }
 
 users = []
@@ -216,6 +220,54 @@ def check_temporal_properties(old_state: dict, new_state: dict) -> Tuple[bool, L
     return (len(errors) == 0), errors
 
 
+def resolve_unacknowledged_shares():
+    progress_made = True
+
+    while(progress_made):
+        progress_made = False
+
+        for user in users:
+            replica = backend.get_full_replica(user)
+            expenses = replica.get("recorded_expenses", {})
+            groups = replica.get("groups", {})
+            
+            for eid, expense in expenses.items():
+                if not expense or expense.get("deleted"):
+                    continue
+                
+                gid = expense.get("group")
+                if not gid:
+                    continue
+                
+                group = groups.get(gid)
+                if not group:
+                    continue
+                
+                # Check for unacknowledged shares
+                for uid in users:
+                    share = expense.get("shares", {}).get(uid, 0)
+                    if share <= 0:
+                        continue
+                    if expense.get("acknowledged_shares", {}).get(uid, False):
+                        continue
+                    
+                    # Try to acknowledge if user is member
+                    if GroupHandler.is_member(uid, group):
+                        status, _ = ExpenseHandler.acknowledge_share(uid, eid)
+                        if status == 1:
+                            progress_made = True
+                            break
+                    # if payer in group, have payer absorb
+                    elif expense.get("payer") == user and GroupHandler.is_member(user, group):
+                        status, _ = ExpenseHandler.payer_absorbs_left_member_share(user, eid, uid)
+                        if status == 1:
+                            progress_made = True
+                            break
+                if progress_made:
+                    break
+            if progress_made:
+                break
+
 def do_final_merges():
     #all users merge into user0
     user0 = users[0]
@@ -231,6 +283,7 @@ def do_final_merges():
         if user == user0: continue
         ReplicaSync.user_id = user
         ReplicaSync._merge_replica(user0_replica)
+    return 1
 
 def check_all_replicas_the_same():
     first = backend.get_full_replica(users[0])
@@ -240,13 +293,40 @@ def check_all_replicas_the_same():
             return False, f"Users {users[0]} replica differs from users {users[i]}s replica"
     return True, ""
 
+def check_all_positive_shares_in_group_acked():
+    # only call after check if all replcias are the same, so check for user0 suficient
+    expenses = backend.get_expenses(users[0])
+    groups = backend.get_groups(users[0])
+
+    for eid, expense in expenses.items():
+        if not expense or expense.get("deleted"):
+            continue
+        gid = expense.get("group")
+        if not gid:
+            continue
+        # check for unacknowledged shares
+        if len(GroupHandler.get_members(users[0], backend.get_group(users[0], gid))) == 0:
+            continue
+        for uid in users:
+            share = expense.get("shares", {}).get(uid, 0)
+            if share <= 0:
+                continue
+            if not expense.get("acknowledged_shares", {}).get(uid, False):
+                return False, f"There is an unacknowledged share on user in group {gid} from user {uid} in expense {eid}"
+    return True, ""
+
 
 def run_test(seed: int, do_temp_cheks=False):
     global users
     rdm = random.Random(seed)
+    action_trace = []
+    max_groups = 1
+    groups_created = 0
+    max_expenses = 1
+    expenses_created = 0
 
     for step in range(MAX_STEPS):
-        if rdm.randint(0, 99) < 10 and len(users) > 1:
+        if rdm.randint(0, 99) < 40 and len(users) > 1:
             user1, user2 = rdm.sample(users, 2)
             action_name = "merge"
             affected_users = [user1, user2]
@@ -264,18 +344,37 @@ def run_test(seed: int, do_temp_cheks=False):
                 action_args = (actor,)
 
         if do_temp_cheks: old_state = {uid: backend.get_full_replica_deep(uid) for uid in affected_users}
+        
+        #action_trace.append(action_name)
 
         status = ""
         if action_name == "merge":
             merge_action(*action_args)
             action_counter[action_name]["Passed"] += 1
+            action_trace.append((action_name, user1))
         else:
+            #if action_name == "create_group":
+             #   if groups_created >= max_groups: continue
+              #  groups_created += 1
+               # action_trace.append((action_name, actor))
+            #if action_name == "create_expense":
+             #   if expenses_created >= max_expenses: continue
+              #  expenses_created += 1
+               # action_trace.append((action_name, actor))
             status = ACTION_MAP[action_name](rdm, *action_args)
-
-        if status == 1:
-            action_counter[action_name]["Passed"] += 1
-        elif status == -1:
+            #if action_name == "create_group" or action_name == "create_expense":
+                #print((action_name, actor))
+                #pprint.pprint(backend.get_full_replica("user0"))
+                #pprint.pprint(backend.get_full_replica("user1"))
+            
+        if status == -1:
             action_counter[action_name]["Failed"] += 1
+        elif status == 1:
+            action_counter[action_name]["Passed"] += 1
+            action_trace.append((action_name, actor))
+            #print(action_name, actor)
+            #pprint.pprint(backend.get_full_replica("user0"))
+            #pprint.pprint(backend.get_full_replica("user1"))
 
         new_state = {uid: backend.get_full_replica(uid) for uid in affected_users}
 
@@ -306,6 +405,10 @@ def run_test(seed: int, do_temp_cheks=False):
     if not ok:
         print(f"[ERROR] Not all replicas are the same after the final merges")
         print(err)
+        print(action_trace)
+        pprint.pprint(backend.get_full_replica("user0"))
+        pprint.pprint(backend.get_full_replica("user1"))
+
         return -1, err
     return True, ""
 
@@ -314,6 +417,7 @@ def merge_action(user1, user2):
     ReplicaSync.user_id = user1
     user2_replica = backend.get_full_replica_deep(user2)
     ReplicaSync._merge_replica(user2_replica)
+    return 1
 
 
 def create_group_action(rdm, creator):
@@ -324,7 +428,7 @@ def create_group_action(rdm, creator):
 def invite_action(rdm, inviter, invitee):
     user_groups = list(backend.get_full_replica(inviter).get("groups", {}).keys())
     if not user_groups:
-        return
+        return -1
     gid = rdm.choice(user_groups)
     status, _ = GroupHandler.invite_member(inviter, invitee, gid)
     return status
@@ -336,7 +440,7 @@ def accept_action(rdm, invitee):
             if invitee in group.get("invited_members", {}) and group["invited_members"][invitee] % 2 == 1:
                 invite_groups.append((uid, gid))
     if not invite_groups:
-        return
+        return -1
     _, gid = rdm.choice(invite_groups)
     status, _ = GroupHandler.accept_invitation(invitee, gid)
     return status
@@ -344,7 +448,7 @@ def accept_action(rdm, invitee):
 def leave_action(rdm, actor):
     actor_groups = [gid for gid in backend.get_groups(actor).keys()]
     if not actor_groups:
-        return
+        return -1
     gid = rdm.choice(actor_groups)
     status, _ = GroupHandler.leave_group(actor, gid)
     return status
@@ -397,7 +501,7 @@ def create_addable_expense_action(rdm, actor):
     status, _ = ExpenseHandler.create_expense(actor, expense_name, shares)
     return status
      
-def add_expense_to_group_action(rdm, actor, smart_chance=0.8):
+def add_expense_to_group_action(rdm, actor, smart_chance=0.9):
     if rdm.random() < smart_chance:
         return add_expense_to_group_smart_action(rdm, actor)
     else:
@@ -408,7 +512,7 @@ def add_expense_to_group_random_action(rdm, actor):
     expenses = replica.get("recorded_expenses", {})
     groups = replica.get("groups", {})
     if not expenses or not groups:
-        return
+        return -1
     eid = rdm.choice(list(expenses.keys()))
     gid = rdm.choice(list(groups.keys()))
 
@@ -454,7 +558,7 @@ def add_expense_to_group_smart_action(rdm, actor):
 def edit_expense_action(rdm, actor, zero_share_chance=0.8):
     expenses = backend.get_expenses(actor)
     if not expenses:
-        return
+        return -1
     eid = rdm.choice(list(expenses.keys()))
 
     shares = {}
@@ -477,13 +581,13 @@ def edit_expense_action(rdm, actor, zero_share_chance=0.8):
 def delete_expense_action(rdm, actor):
     expenses = backend.get_expenses(actor)
     if not expenses:
-        return
+        return -1
     eid = rdm.choice(list(expenses.keys()))
 
     status, _ = ExpenseHandler.delete_expense(actor, eid)
     return status
 
-def acknowledge_expense_action(rdm, actor, smart_chance=0.8):
+def acknowledge_expense_action(rdm, actor, smart_chance=0.9):
     if rdm.random() < smart_chance:
         return acknowledge_expense_smart_action(rdm, actor)
     else:
@@ -493,7 +597,7 @@ def acknowledge_expense_action(rdm, actor, smart_chance=0.8):
 def acknowledge_expense_random_action(rdm, actor):
     expenses = backend.get_expenses(actor)
     if not expenses:
-        return
+        return -1
     eid = rdm.choice(list(expenses.keys()))
 
     status, _ = ExpenseHandler.acknowledge_share(actor, eid)
@@ -501,33 +605,101 @@ def acknowledge_expense_random_action(rdm, actor):
 
 
 def acknowledge_expense_smart_action(rdm, actor):
+    for actor in users:
+        replica = backend.get_full_replica(actor)
+        expenses = replica.get("recorded_expenses", {})
+        groups = replica.get("groups", {})
+        
+        if not expenses or not groups:
+            continue
+            #return acknowledge_expense_random_action(rdm, actor)
+        
+        for eid, expense in expenses.items():
+            if not expense:
+                continue
+            gid = expense.get("group")
+            if not gid:
+                continue
+            group = groups.get(gid)
+            if not group or not GroupHandler.is_member(actor, group):
+                continue
+            if expense.get("shares", {}).get(actor, 0) <= 0:
+                continue
+            if expense.get("acknowledged_shares", {}).get(actor, False):
+                continue
+            if expense.get("deleted", False):
+                continue
+            
+            status, _ = ExpenseHandler.acknowledge_share(actor, eid)
+            if status == 1:
+                return status
+        
+    return acknowledge_expense_random_action(rdm, actor)
+
+def payer_absorbs_left_member_action(rdm, actor, smart_chance=0.9):
+    if rdm.random() < smart_chance:
+        return payer_absorbs_left_member_smart_action(rdm, actor)
+    else:
+        return payer_absorbs_left_member_random_action(rdm, actor)
+
+
+def payer_absorbs_left_member_random_action(rdm, actor):
+    expenses = backend.get_expenses(actor)
+    if not expenses:
+        return -1
+    eid = rdm.choice(list(expenses.keys()))
+    
+    # Pick random user
+    left_member = rdm.choice(users)
+    
+    status, _ = ExpenseHandler.payer_absorbs_left_member_share(actor, eid, left_member)
+    return status
+
+
+def payer_absorbs_left_member_smart_action(rdm, actor):
     replica = backend.get_full_replica(actor)
     expenses = replica.get("recorded_expenses", {})
     groups = replica.get("groups", {})
     
     if not expenses or not groups:
-        return acknowledge_expense_random_action(rdm, actor)
+        return -1
+    
+    valid_pairs = []
     
     for eid, expense in expenses.items():
-        if not expense:
+        if not expense or expense.get("deleted"):
             continue
+        if expense.get("payer") != actor:
+            continue
+        
         gid = expense.get("group")
         if not gid:
             continue
+        
         group = groups.get(gid)
         if not group or not GroupHandler.is_member(actor, group):
             continue
-        if expense.get("shares", {}).get(actor, 0) <= 0:
-            continue
-        if expense.get("acknowledged_shares", {}).get(actor, False):
-            continue
-        if expense.get("deleted", False):
-            continue
         
-        status, _ = ExpenseHandler.acknowledge_share(actor, eid)
-        return status
+        for user in users:
+            if user == actor:
+                continue
+            if GroupHandler.is_member(user, group):
+                continue
+            if not GroupHandler.was_ever_member(user, group):
+                continue
+            if expense.get("shares", {}).get(user, 0) <= 0:
+                continue
+            if expense.get("acknowledged_shares", {}).get(user, False):
+                continue
+            
+            valid_pairs.append((eid, user))
     
-    return acknowledge_expense_random_action(rdm, actor)
+    if not valid_pairs:
+        return -1
+    
+    eid, left_member = rdm.choice(valid_pairs)
+    status, _ = ExpenseHandler.payer_absorbs_left_member_share(actor, eid, left_member)
+    return status
 
 
 ACTION_MAP = {
@@ -539,7 +711,8 @@ ACTION_MAP = {
     "add_expense_to_group": add_expense_to_group_action,
     "edit_expense": edit_expense_action,
     "delete_expense": delete_expense_action,
-    "acknowledge_share": acknowledge_expense_action
+    "acknowledge_share": acknowledge_expense_action,
+    "payer_absorbs_left_member": payer_absorbs_left_member_action
 }
 
 def format_hms(seconds):
@@ -565,6 +738,7 @@ if __name__ == "__main__":
 
     _setup()
 
+    start_seed = random.randint(0,100000000)
     total_expenses = 0
     total_groups = 0
     total_time = 0.0
@@ -575,16 +749,17 @@ if __name__ == "__main__":
     aggregated_actions = defaultdict(lambda: {"Passed": 0, "Failed": 0})
 
     for i in range(MAX_TEST_RUNS):
+        seed = start_seed + i
 
         start = time.perf_counter()
 
         print(f"Running test {i+1}/{MAX_TEST_RUNS}...", end="\r")
-        result, errs = run_test(seed=i, do_temp_cheks=args.do_temp_check)
+        result, errs = run_test(seed=seed, do_temp_cheks=args.do_temp_check)
         if result == -1:
             error_found = True
-            error_seed = i
+            error_seed = seed
             print(f"\n{'='*70}")
-            print(f"ERROR DETECTED IN TEST RUN {i+1} (seed={i})")
+            print(f"ERROR DETECTED IN TEST RUN {i} (seed={start_seed+i})")
             print(f"{'='*70}")
             break
 
