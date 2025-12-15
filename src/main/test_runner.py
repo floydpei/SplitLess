@@ -12,9 +12,9 @@ from replica_sync import ReplicaSync
 from storage_provider import get_backend, use_memory_backend
 from balance_handler import BalanceHandler
 
-NUM_USERS = 10
+NUM_USERS = 5
 MAX_STEPS = 1000
-MAX_TEST_RUNS = 1
+MAX_TEST_RUNS = 10
 EPS = 1e-6  # float comparisons
 
 backend = None
@@ -28,7 +28,8 @@ ACTIONS = [
     "add_expense_to_group",
     "edit_expense",
     "delete_expense",
-    "acknowledge_share"
+    "acknowledge_share",
+    "payer_absorbs_left_member"
 ]
 
 def get_action_weights(step, max_steps):
@@ -44,7 +45,8 @@ def get_action_weights(step, max_steps):
             "add_expense_to_group": 0.02,
             "edit_expense":         0.02,
             "delete_expense":       0.01,
-            "acknowledge_share":     0.01
+            "acknowledge_share":     0.01,
+            "payer_absorbs_left_member":    0.00
         }
     elif progress < 0.10:  # group membership
         return {
@@ -56,19 +58,21 @@ def get_action_weights(step, max_steps):
             "add_expense_to_group": 0.12,
             "edit_expense":         0.05,
             "delete_expense":       0.03,
-            "acknowledge_share":     0.05
+            "acknowledge_share":     0.05,
+            "payer_absorbs_left_member":    0.00
         }
     else:  # expense heavy
         return {
             "create_group": 0.01,
             "invite":       0.05,
             "accept":       0.05,
-            "leave":        0.07,
-            "create_expense":       0.18,
-            "add_expense_to_group": 0.30,
-            "edit_expense":         0.14,
-            "delete_expense":       0.10,
-            "acknowledge_share":     0.10
+            "leave":        0.05,
+            "create_expense":       0.10,
+            "add_expense_to_group": 0.20,
+            "edit_expense":         0.09,
+            "delete_expense":       0.09,
+            "acknowledge_share":     0.24,
+            "payer_absorbs_left_member":    0.02
         }
 
 users = []
@@ -246,7 +250,7 @@ def run_test(seed: int, do_temp_cheks=False):
     rdm = random.Random(seed)
 
     for step in range(MAX_STEPS):
-        if rdm.randint(0, 99) < 10 and len(users) > 1:
+        if rdm.randint(0, 99) < 20 and len(users) > 1:
             user1, user2 = rdm.sample(users, 2)
             action_name = "merge"
             affected_users = [user1, user2]
@@ -350,7 +354,7 @@ def leave_action(rdm, actor):
     return status
 
 
-def create_expense_action(rdm, actor, zero_share_chance=0.8, addable_chance=0.8):
+def create_expense_action(rdm, actor, zero_share_chance=0.5, addable_chance=0.8):
     if rdm.random() < addable_chance:
         return create_addable_expense_action(rdm, actor)
     else:
@@ -375,7 +379,7 @@ def create_random_expense_action(rdm, actor, zero_share_chance=0.8):
     status, _ = ExpenseHandler.create_expense(actor, expense_name, shares)
     return status
 
-def create_addable_expense_action(rdm, actor):
+def create_addable_expense_action(rdm, actor, zero_share_chance=0.2):
     replica = backend.get_full_replica(actor)
     groups = replica.get("groups", {})
 
@@ -529,6 +533,71 @@ def acknowledge_expense_smart_action(rdm, actor):
     
     return acknowledge_expense_random_action(rdm, actor)
 
+def payer_absorbs_left_member_action(rdm, actor, smart_chance=0.9):
+    if rdm.random() < smart_chance:
+        return payer_absorbs_left_member_smart_action(rdm, actor)
+    else:
+        return payer_absorbs_left_member_random_action(rdm, actor)
+
+
+def payer_absorbs_left_member_random_action(rdm, actor):
+    expenses = backend.get_expenses(actor)
+    if not expenses:
+        return -1
+    eid = rdm.choice(list(expenses.keys()))
+    
+    # Pick random user
+    left_member = rdm.choice(users)
+    
+    status, _ = ExpenseHandler.payer_absorbs_left_member_share(actor, eid, left_member)
+    return status
+
+
+def payer_absorbs_left_member_smart_action(rdm, actor):
+    replica = backend.get_full_replica(actor)
+    expenses = replica.get("recorded_expenses", {})
+    groups = replica.get("groups", {})
+    
+    if not expenses or not groups:
+        return -1
+    
+    valid_pairs = []
+    
+    for eid, expense in expenses.items():
+        if not expense or expense.get("deleted"):
+            continue
+        if expense.get("payer") != actor:
+            continue
+        
+        gid = expense.get("group")
+        if not gid:
+            continue
+        
+        group = groups.get(gid)
+        if not group or not GroupHandler.is_member(actor, group):
+            continue
+        
+        for user in users:
+            if user == actor:
+                continue
+            if GroupHandler.is_member(user, group):
+                continue
+            if not GroupHandler.was_ever_member(user, group):
+                continue
+            if expense.get("shares", {}).get(user, 0) <= 0:
+                continue
+            if expense.get("acknowledged_shares", {}).get(user, False):
+                continue
+            
+            valid_pairs.append((eid, user))
+    
+    if not valid_pairs:
+        return -1
+    
+    eid, left_member = rdm.choice(valid_pairs)
+    status, _ = ExpenseHandler.payer_absorbs_left_member_share(actor, eid, left_member)
+    return status
+
 
 ACTION_MAP = {
     "invite": invite_action,
@@ -539,7 +608,8 @@ ACTION_MAP = {
     "add_expense_to_group": add_expense_to_group_action,
     "edit_expense": edit_expense_action,
     "delete_expense": delete_expense_action,
-    "acknowledge_share": acknowledge_expense_action
+    "acknowledge_share": acknowledge_expense_action,
+    "payer_absorbs_left_member": payer_absorbs_left_member_action
 }
 
 def format_hms(seconds):

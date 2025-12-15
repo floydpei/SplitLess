@@ -120,6 +120,8 @@ class CLIInterface:
                     print(self.cmd_expense_acknowledge(args))
                 elif cmd == "expense-pending-acknowledgments":
                     print(self.cmd_expense_pending_acknowledgments())
+                elif cmd == "expense-payer-absorbs":
+                    print(self.cmd_expense_payer_absorbs(args))
                 elif cmd == "group-expenses":
                     print(self.cmd_group_expenses(args))
                 elif cmd == "group-balance":
@@ -143,41 +145,42 @@ class CLIInterface:
     def print_help(self):
         print("""
     Available commands:
-    show all                          - Show full replica
-    show groups                       - Show all groups
-    show expenses                     - Show all expenses
-    show users                        - Show all known users
-    group-create <name>               - Create a new group
-    group-add-member <group> <user>   - Add user to group (name or id)
-    group-invite <group> <user>       - Invite a user into a group
-    group-accept <group>              - Accept an invitation
-    group-invitations                 - List your open invitations
+    show all                                        - Show full replica
+    show groups                                     - Show all groups
+    show expenses                                   - Show all expenses
+    show users                                      - Show all known users
+    group-create <name>                             - Create a new group
+    group-add-member <group> <user>                 - Add user to group (name or id)
+    group-invite <group> <user>                     - Invite a user into a group
+    group-accept <group>                            - Accept an invitation
+    group-invitations                               - List your open invitations
 
-    group-leave <group>               - Leave a group
-    group-suggest-payer <group>       - Suggest the next payer (lowest balance)
-    group-balance <group> <user>      - Show your balance with a user in a group
-    group-expenses <group>             - List all expenses in a group
+    group-leave <group>                             - Leave a group
+    group-suggest-payer <group>                     - Suggest the next payer (lowest balance)
+    group-balance <group> <user>                    - Show your balance with a user in a group
+    group-expenses <group>                          - List all expenses in a group
 
     expense-create <name> <payer_share>:<amount> [<other_share>:<amount> ...]
-                                        - Create a new expense
-    expense-delete <expense>          - Delete an expense
+                                                    - Create a new expense
+    expense-delete <expense>                        - Delete an expense
     expense-modify <expense> <user>:<share> ...
-                                        - Modify expense shares
+                                                    - Modify expense shares
     expense-add-to-group <expense> <group>
-                                        - Add expense to a group
+                                                    - Add expense to a group
     expense-remove-from-group <expense>
-                                        - Remove expense from its group
-    expense-acknowledge <expense>     - Acknowledge your share in an expense
-    expense-pending-acknowledgments   - List expenses awaiting your acknowledgment
+                                                    - Remove expense from its group
+    expense-acknowledge <expense>                   - Acknowledge your share in an expense
+    expense-pending-acknowledgments                 - List expenses awaiting your acknowledgment
+    expense-payer-absorbs <expense> <left_member>   - Payer absorbs share of left member
 
     --- Replica Sync Commands ---
-    sync-start [port]                 - Start listening for replica sync
-    sync-stop                         - Stop the replica sync listener
-    sync-address                      - Show this replica's address
-    sync-send <host> <port>           - Send your full replica to a peer
-    sync-request <host> <port>        - Request a replica from a peer
+    sync-start [port]                               - Start listening for replica sync
+    sync-stop                                       - Stop the replica sync listener
+    sync-address                                    - Show this replica's address
+    sync-send <host> <port>                         - Send your full replica to a peer
+    sync-request <host> <port>                      - Request a replica from a peer
 
-    exit / quit                       - Exit CLI
+    exit / quit                                     - Exit CLI
     """)
 
     def cmd_sync_address(self):
@@ -392,6 +395,16 @@ class CLIInterface:
             result += f"    Payer: {expense['payer']}\n"
         
         return result
+    
+    def cmd_expense_payer_absorbs(self, args):
+        if len(args) < 2:
+            return "Usage: expense-payer-absorbs <expense> <left_member>"
+        eid = self._resolve_entity("expense", args[0])
+        uid = self._resolve_entity("user", args[1])
+        if eid and uid:
+            _, msg = ExpenseHandler.payer_absorbs_left_member_share(self.user_id, eid, uid)
+            return msg
+        return ""
 
     def cmd_group_balance(self, args):
         if len(args) < 2:

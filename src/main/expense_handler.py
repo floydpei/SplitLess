@@ -50,7 +50,8 @@ class ExpenseHandler:
         version = 0
         amount = sum(shares.values())
         deleted = False
-        acknowledged_shares = {user: False for user, share in shares.items() if share > 0.0}    
+        acknowledged_shares = {user: False for user, share in shares.items()}#if share > 0.0}
+        if shares[payer] >= 0: acknowledged_shares[payer] = True 
         for share in shares.values():
             if share < 0:
                 return (-1, "[ExpenseHandler] The shares of an expense have to be non negative.")
@@ -166,7 +167,8 @@ class ExpenseHandler:
         expense["shares"] = shares
         expense["amount"] = amount
         expense["version"] += 1
-        expense["acknowledged_shares"] = {user : False for user in shares if shares[user] > 0.0}
+        expense["acknowledged_shares"] = {user : False for user in shares}# if shares[user] > 0.0}
+        expense["acknowledged_shares"][actor] = True
         backend.write_expense(actor, expense)
         if gid:
             BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
@@ -196,4 +198,53 @@ class ExpenseHandler:
         backend.write_expense(actor, expense)
         BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
         return (1, "[ExpenseHandler] Succesfully acknowledged share of user " + actor)
+    
+    @staticmethod
+    def payer_absorbs_left_member_share(actor: str, eid: str, left_member: str):
+        backend = get_backend()
+        expense = backend.get_expense(actor, eid)
+        
+        if not expense:
+            return (-1, "[ExpenseHandler] The expense with id " + eid + " does not exist on user " + actor + " replica.")
+        if expense["deleted"]:
+            return (-1, "[ExpenseHandler] The expense " + eid + " is deleted.")
+        if not actor == expense["payer"]:
+            return (-1, "[ExpenseHandler] User " + actor + " is not the payer of expense " + eid + ".")
+        if actor == left_member:
+            return (-1, "[ExpenseHandler] Payer cannot absorb their own share.")
+        
+        gid = expense.get("group")
+        if not gid:
+            return (-1, "[ExpenseHandler] The expense " + eid + " is not in a group.")
+        
+        group = backend.get_group(actor, gid)
+        if not group:
+            return (-1, "[ExpenseHandler] Group " + gid + " does not exist on user " + actor + " replica.")
+        if not GroupHandler.is_member(actor, group):
+            return (-1, "[ExpenseHandler] User " + actor + " is not a member of group " + gid + ".")
+        
+        if GroupHandler.is_member(left_member, group):
+            return (-1, "[ExpenseHandler] User " + left_member + " is still a member of group " + gid + ". They should acknowledge themselves.")
+        if not GroupHandler.was_ever_member(left_member, group):
+            return (-1, "[ExpenseHandler] User " + left_member + " was never a member of group " + gid + ".")
+        
+        left_share = expense.get("shares", {}).get(left_member, 0)
+        if left_share == 0:
+            return (-1, "[ExpenseHandler] User " + left_member + " has no positive share in expense " + eid + ".")
+        if expense.get("acknowledged_shares", {}).get(left_member, False):
+            return (-1, "[ExpenseHandler] User " + left_member + " already acknowledged their share.")
+        
+        shares = expense["shares"].copy()
+        shares[actor] = shares.get(actor, 0) + left_share
+        shares[left_member] = 0
+
+        #expense["shares"][actor] += left_share
+        #expense["shares"][left_member] = 0
+        
+        expense["shares"] = shares
+        expense["version"] += 1
+        
+        backend.write_expense(actor, expense)
+        BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
+        return (1, "[ExpenseHandler] Successfully absorbed " + f"{left_share:.2f}" + " from " + left_member + " into payer's share for expense " + eid + ".")
         

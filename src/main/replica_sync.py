@@ -138,11 +138,15 @@ class ReplicaSync:
                 merged_expenses[eid] = exp_own
                 merged_acknowleged_shares = {}
                 postive_user_shares = [user for user in exp_own.get("shares", {}) if exp_own.get("shares")[user] > 0]
-                for uid in postive_user_shares:
-                    merged_acknowleged_shares[uid] = (
-                        exp_own.get("acknowledged_shares", {}).get(uid, False) or 
-                        exp_other.get("acknowledged_shares", {}).get(uid, False)
-                    )
+                for uid in exp_own.get("shares", {}):#postive_user_shares:
+                    #merged_acknowleged_shares[uid] = (
+                     #   exp_own.get("acknowledged_shares", {}).get(uid, False) or 
+                      #  exp_other.get("acknowledged_shares", {}).get(uid, False)
+                    #)
+                    if exp_own.get("acknowledged_shares", {}).get(uid, False) or exp_other.get("acknowledged_shares", {}).get(uid, False):
+                        merged_acknowleged_shares[uid] = True
+                    else:
+                        merged_acknowleged_shares[uid] = False
                 merged_expenses[eid]["acknowledged_shares"] = merged_acknowleged_shares
         
         return merged_expenses
