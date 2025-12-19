@@ -3,7 +3,7 @@ TLA/test/
 TLA/SplitLess_test/
 TLA/*.txt
 /Project_ideas.pdf
-TLA/SplitLess/*.toolbox/
+TLA/SplitLEss/SplitLess_group_join_leave.toolbox
 *.DS_Store
 /Notes
 **/__pycache__
