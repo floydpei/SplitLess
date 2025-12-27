@@ -7,12 +7,12 @@
     <intAttribute key="dfidDepth" value="100"/>
     <booleanAttribute key="dfidMode" value="false"/>
     <intAttribute key="distributedFPSetCount" value="0"/>
-    <stringAttribute key="distributedNetworkInterface" value="192.168.178.80"/>
+    <stringAttribute key="distributedNetworkInterface" value="10.3.0.30"/>
     <intAttribute key="distributedNodesCount" value="1"/>
     <stringAttribute key="distributedTLC" value="off"/>
     <stringAttribute key="distributedTLCVMArgs" value=""/>
     <intAttribute key="fpBits" value="1"/>
-    <intAttribute key="fpIndex" value="110"/>
+    <intAttribute key="fpIndex" value="34"/>
     <booleanAttribute key="fpIndexRandom" value="true"/>
     <intAttribute key="maxHeapSize" value="92"/>
     <intAttribute key="maxSetSize" value="1000000"/>
@@ -51,7 +51,7 @@
         <listEntry value="POSSIBLE_EXPENSE_IDs;;{eid1, eid2};1;0"/>
         <listEntry value="USERS;;{a, b, c};1;0"/>
     </listAttribute>
-    <stringAttribute key="modelParameterContraint" value="actionCounter &lt;= 3"/>
+    <stringAttribute key="modelParameterContraint" value="actionCounter &lt;= 7"/>
     <listAttribute key="modelParameterDefinitions"/>
     <stringAttribute key="modelParameterModelValues" value="{}"/>
     <stringAttribute key="modelParameterNewDefinitions" value=""/>
