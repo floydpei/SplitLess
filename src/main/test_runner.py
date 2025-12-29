@@ -245,6 +245,209 @@ def check_all_replicas_the_same():
     return True, ""
 
 
+# final liveness:
+
+def has_unacknowledged_shares_in_active_groups():   # Check if there are any unacked shares in non-empty groups
+    for user in users:
+        replica = backend.get_full_replica(user)
+        expenses = replica.get("recorded_expenses", {})
+        groups = replica.get("groups", {})
+        
+        for eid, expense in expenses.items():
+            if not expense or expense.get("deleted"):
+                continue
+            
+            gid = expense.get("group")
+            if not gid:
+                continue
+            
+            group = groups.get(gid)
+            if not group:
+                continue
+            
+            has_active_member = any(GroupHandler.is_member(u, group) for u in users)
+            if not has_active_member:
+                continue
+            
+            for uid in users:
+                share = expense.get("shares", {}).get(uid, 0)
+                if share > 0 and not expense.get("acknowledged_shares", {}).get(uid, False):
+                    return True
+
+    return False
+
+#3 Options to ack share
+
+#1 If uid is a member, they can acknowledge
+def option_acknowledge_by_member(uid, eid, group):
+    if GroupHandler.is_member(uid, group):
+        status, _ = ExpenseHandler.acknowledge_share(uid, eid)
+        if status == 1:
+            return True
+    return False
+
+#2 If uid left, payer can absorb
+def option_payer_absorbs_left_member(uid, eid, payer, group, users):
+    if GroupHandler.was_ever_member(uid, group) and not GroupHandler.is_member(uid, group):
+        if payer and GroupHandler.is_member(payer, group):
+            # Find a replica where payer is the user
+            for payer_user in users:
+                if payer_user == payer:
+                    status, _ = ExpenseHandler.payer_absorbs_left_member_share(payer, eid, uid)
+                    if status == 1:
+                        return True
+                    break
+    return False
+
+#3 If uid left but was a member, rejoin to acknowledge
+def option_rejoin_and_acknowledge(uid, eid, gid, group, users):
+    if GroupHandler.was_ever_member(uid, group) and not GroupHandler.is_member(uid, group):
+        #print("GROUP:\n\n")
+        #print(group)
+        status, _ = GroupHandler.accept_invitation(uid, gid)
+        if status == 1:
+         #   print("was already invited\n")
+            status, _ = ExpenseHandler.acknowledge_share(uid, eid)
+            if status == 1:
+                return True
+
+        # Find a current member to invite uid back
+        inviter = None
+        for potential_inviter in users:
+            if potential_inviter == uid: continue
+            inviter_replica = backend.get_full_replica(potential_inviter)
+            inviter_group = inviter_replica.get("groups", {}).get(gid)
+            if inviter_group and GroupHandler.is_member(potential_inviter, inviter_group):
+                inviter = potential_inviter
+                break
+
+        if inviter:
+            #1 Inviter invites uid
+            status, msg = GroupHandler.invite_member(inviter, uid, gid)
+            #if status != 1:
+          #      print("invite failed on inveriters " + inviter + " replica \n " + msg + "\n" )
+           #     print(inviter_group)
+             #   return False
+
+            #2 Merge inviter's replica to uid's replica
+            ReplicaSync.user_id = uid
+            inviter_replica = backend.get_full_replica_deep(inviter)
+            ReplicaSync._merge_replica(inviter_replica)
+
+            #3 uid accepts invitation
+            status, msg = GroupHandler.accept_invitation(uid, gid)
+            #if status == 1:
+             #   print("invitation accept failed for " + uid + " inviter " + inviter + " " + msg)
+              #  print(backend.get_group(uid, gid))
+               # print(backend.get_expense(uid, eid))
+                #return False
+
+            #4 uid acknowledges share
+            status, _ = ExpenseHandler.acknowledge_share(uid, eid)
+            if status == 1:
+                return True
+
+    return False
+
+# try to resolve unack share for user
+def resolve_unacknowledged_share_for_user(user):
+    replica = backend.get_full_replica(user)
+    expenses = replica.get("recorded_expenses", {})
+    groups = replica.get("groups", {})
+    
+    for eid, expense in expenses.items():
+        if not expense or expense.get("deleted"):
+            continue
+        
+        gid = expense.get("group")
+        if not gid:
+            continue
+        
+        group = groups.get(gid)
+        if not group:
+            continue
+        
+        has_active_member = any(GroupHandler.is_member(u, group) for u in users)
+        if not has_active_member:
+            continue
+        
+        # find unacknowledged share for this user
+        for uid in users:
+            share = expense.get("shares", {}).get(uid, 0)
+            if share <= 0:
+                continue
+            if expense.get("acknowledged_shares", {}).get(uid, False):
+                continue
+            
+            payer = expense.get("payer")
+            
+            # option 1
+            if option_acknowledge_by_member(uid, eid, group):
+                #print("option_1")
+                return True
+            # option 2
+            elif option_payer_absorbs_left_member(uid, eid, payer, group, users):
+                #print("option_2")
+                return True
+            # option 3
+            elif option_rejoin_and_acknowledge(uid, eid, gid, group, users):
+                #print("option_3")
+                return True
+    
+    return False
+
+
+
+def resolve_all_unacknowledged_shares(max_iterations=MAX_STEPS):    
+    for iteration in range(max_iterations):
+        # check if there are any unacknowledged shares left
+        if not has_unacknowledged_shares_in_active_groups():
+            return True
+                
+        progress_made = False
+        # Try to resolve one unacknowledged share for each user
+        for user in users:
+            progress_made = resolve_unacknowledged_share_for_user(user)
+        #if progress_made: print("progress")
+        
+        do_final_merges()
+
+    print(f"[Liveness] WARNING: Failed to resolve all shares after {max_iterations} iterations")
+    return False
+
+
+def check_liveness_all_pos_shares_acked():
+    for user in users:
+        replica = backend.get_full_replica(user)
+        expenses = replica.get("recorded_expenses", {})
+        groups = replica.get("groups", {})
+        
+        for eid, expense in expenses.items():
+            if not expense or expense.get("deleted"):
+                continue
+            
+            gid = expense.get("group")
+            if not gid:
+                continue
+            
+            group = groups.get(gid)
+            if not group:
+                continue
+            
+            # Check if group has at least one active member
+            has_active_member = any(GroupHandler.is_member(u, group) for u in users)
+            if not has_active_member:
+                continue
+            
+            # Check that all positive shares are acknowledged
+            for uid in users:
+                share = expense.get("shares", {}).get(uid, 0)
+                if share > 0 and not expense.get("acknowledged_shares", {}).get(uid, False):
+                    return False, f"Expense {eid} has unacknowledged share for user {uid} \n {group} \n {expense}"
+    
+    return True, ""
+
+
 def run_test(seed: int, do_temp_cheks=False):
     global users
     rdm = random.Random(seed)
@@ -304,13 +507,21 @@ def run_test(seed: int, do_temp_cheks=False):
                     print("New state:")
                     pprint.pprint(new_state[uid])
                     return -1, errs
+
     # final liveness
     do_final_merges()
-    ok, err = check_all_replicas_the_same()
-    if not ok:
+    resolve_all_unacknowledged_shares()
+    all_replicas_the_same, err = check_all_replicas_the_same()
+    all_pos_shares_acked, err = check_liveness_all_pos_shares_acked()
+    if not all_replicas_the_same:
         print(f"[ERROR] Not all replicas are the same after the final merges")
         print(err)
         return -1, err
+    if not all_pos_shares_acked:
+        print(f"[ERROR] Not all postivie shares got acknowleged")
+        print(err)
+        return -1, err
+    
     return True, ""
 
 
@@ -356,7 +567,7 @@ def leave_action(rdm, actor):
 
 def create_expense_action(rdm, actor, zero_share_chance=0.5, addable_chance=0.8):
     if rdm.random() < addable_chance:
-        return create_addable_expense_action(rdm, actor)
+        return create_addable_expense_action(rdm, actor, zero_share_chance=zero_share_chance)
     else:
         return create_random_expense_action(rdm, actor, zero_share_chance=zero_share_chance)
 
@@ -379,13 +590,13 @@ def create_random_expense_action(rdm, actor, zero_share_chance=0.8):
     status, _ = ExpenseHandler.create_expense(actor, expense_name, shares)
     return status
 
-def create_addable_expense_action(rdm, actor, zero_share_chance=0.2):
+def create_addable_expense_action(rdm, actor, zero_share_chance):
     replica = backend.get_full_replica(actor)
     groups = replica.get("groups", {})
 
     member_groups = [gid for gid, g in groups.items() if GroupHandler.is_member(actor, g)]
     if not member_groups:
-        return create_random_expense_action(rdm, actor, zero_share_chance=0.8)
+        return create_random_expense_action(rdm, actor, zero_share_chance=zero_share_chance)
 
     gid = rdm.choice(member_groups)
     group = groups[gid]
@@ -393,7 +604,7 @@ def create_addable_expense_action(rdm, actor, zero_share_chance=0.2):
     members = list(GroupHandler.get_members("not_used_string", group))
 
     if not members:
-        return create_random_expense_action(rdm, actor, zero_share_chance=0.8)
+        return create_random_expense_action(rdm, actor, zero_share_chance=zero_share_chance)
 
     expense_name = f"exp_addable_{rdm.randint(0, 10_000_000)}"
     shares = {uid: rdm.uniform(1, 100) for uid in members}
@@ -639,29 +850,30 @@ if __name__ == "__main__":
     total_groups = 0
     total_time = 0.0
 
+    start_seed = random.randint(0,1000000000)
     error_found = False
     error_seed = None
 
     aggregated_actions = defaultdict(lambda: {"Passed": 0, "Failed": 0})
 
     for i in range(MAX_TEST_RUNS):
-
+        seed = start_seed + i
         start = time.perf_counter()
 
-        print(f"Running test {i+1}/{MAX_TEST_RUNS}...", end="\r")
-        result, errs = run_test(seed=i, do_temp_cheks=args.do_temp_check)
+        print(f"Running test {i+1}/{MAX_TEST_RUNS}... with seed {seed} ", end="\r")
+        result, errs = run_test(seed=seed, do_temp_cheks=args.do_temp_check)
         if result == -1:
             error_found = True
-            error_seed = i
+            error_seed = seed
             print(f"\n{'='*70}")
-            print(f"ERROR DETECTED IN TEST RUN {i+1} (seed={i})")
+            print(f"ERROR DETECTED IN TEST RUN {i+1} (seed={seed})")
             print(f"{'='*70}")
             break
 
         run_time = time.perf_counter() - start
         total_time += run_time
         elapsed_time = format_hms(total_time)
-        print(f"Running test {i+1}/{MAX_TEST_RUNS}...   Elapsed time: {elapsed_time}   ", end="\r")
+        print(f"Running test {i+1}/{MAX_TEST_RUNS}... with seed {seed}   Elapsed time: {elapsed_time}   ", end="\r")
 
         #collect results
         last_state = backend.get_full_replica("user1")
