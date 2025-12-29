@@ -51,6 +51,7 @@ class ExpenseHandler:
         amount = sum(shares.values())
         deleted = False
         acknowledged_shares = {user: False for user, share in shares.items()}#if share > 0.0}
+        if payer not in shares: shares[payer] = 0
         if shares[payer] >= 0: acknowledged_shares[payer] = True 
         for share in shares.values():
             if share < 0:
