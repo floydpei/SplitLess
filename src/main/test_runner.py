@@ -14,7 +14,7 @@ from balance_handler import BalanceHandler
 
 NUM_USERS = 5
 MAX_STEPS = 1000
-MAX_TEST_RUNS = 10
+MAX_TEST_RUNS = 10000
 EPS = 1e-6  # float comparisons
 
 backend = None
@@ -26,6 +26,7 @@ ACTIONS = [
     "create_group",
     "create_expense",
     "add_expense_to_group",
+    "remove_expense_from_group",
     "edit_expense",
     "delete_expense",
     "acknowledge_share",
@@ -42,7 +43,8 @@ def get_action_weights(step, max_steps):
             "accept":       0.28,
             "leave":        0.01,
             "create_expense":       0.02,
-            "add_expense_to_group": 0.02,
+            "add_expense_to_group": 0.01,
+            "remove_expense_from_group": 0.01,
             "edit_expense":         0.02,
             "delete_expense":       0.01,
             "acknowledge_share":     0.01,
@@ -55,7 +57,8 @@ def get_action_weights(step, max_steps):
             "accept":       0.30,
             "leave":        0.03,
             "create_expense":       0.10,
-            "add_expense_to_group": 0.12,
+            "add_expense_to_group": 0.06,
+            "remove_expense_from_group": 0.06,
             "edit_expense":         0.05,
             "delete_expense":       0.03,
             "acknowledge_share":     0.05,
@@ -67,12 +70,13 @@ def get_action_weights(step, max_steps):
             "invite":       0.05,
             "accept":       0.05,
             "leave":        0.05,
-            "create_expense":       0.10,
-            "add_expense_to_group": 0.20,
+            "create_expense":       0.09,
+            "add_expense_to_group": 0.19,
+            "remove_expense_from_group": 0.02,
             "edit_expense":         0.09,
             "delete_expense":       0.09,
             "acknowledge_share":     0.24,
-            "payer_absorbs_left_member":    0.02
+            "payer_absorbs_left_member":    0.03
         }
 
 users = []
@@ -512,15 +516,15 @@ def run_test(seed: int, do_temp_cheks=False):
     do_final_merges()
     resolve_all_unacknowledged_shares()
     all_replicas_the_same, err = check_all_replicas_the_same()
-    all_pos_shares_acked, err = check_liveness_all_pos_shares_acked()
+    all_pos_shares_acked, err2 = check_liveness_all_pos_shares_acked()
     if not all_replicas_the_same:
         print(f"[ERROR] Not all replicas are the same after the final merges")
         print(err)
         return -1, err
     if not all_pos_shares_acked:
         print(f"[ERROR] Not all postivie shares got acknowleged")
-        print(err)
-        return -1, err
+        print(err2)
+        return -1, err2
     
     return True, ""
 
@@ -664,6 +668,56 @@ def add_expense_to_group_smart_action(rdm, actor):
     
     eid, gid = rdm.choice(valid_pairs)
     status, _ = ExpenseHandler.add_expense_to_group(actor, eid, gid)
+    return status
+
+def remove_expense_from_group_action(rdm, actor, smart_chance=0.8):
+    if rdm.random() < smart_chance:
+        return remove_expense_from_group_smart_action(rdm, actor)
+    else:
+        return remove_expense_from_group_random_action(rdm, actor)
+
+
+def remove_expense_from_group_random_action(rdm, actor):
+    expenses = backend.get_expenses(actor)
+    if not expenses:
+        return -1
+    eid = rdm.choice(list(expenses.keys()))
+    
+    status, _ = ExpenseHandler.remove_expense_from_group(actor, eid)
+    return status
+
+
+def remove_expense_from_group_smart_action(rdm, actor):
+    replica = backend.get_full_replica(actor)
+    expenses = replica.get("recorded_expenses", {})
+    groups = replica.get("groups", {})
+    
+    if not expenses or not groups:
+        return -1
+    
+    removable_expenses = []
+    
+    for eid, expense in expenses.items():
+        if not expense or expense.get("deleted"):
+            continue
+        if expense.get("payer") != actor:
+            continue
+        
+        gid = expense.get("group")
+        if not gid:
+            continue
+        
+        group = groups.get(gid)
+        if not group or not GroupHandler.is_member(actor, group):
+            continue
+        
+        removable_expenses.append(eid)
+    
+    if not removable_expenses:
+        return -1
+    
+    eid = rdm.choice(removable_expenses)
+    status, _ = ExpenseHandler.remove_expense_from_group(actor, eid)
     return status
 
 def edit_expense_action(rdm, actor, zero_share_chance=0.8):
@@ -817,6 +871,7 @@ ACTION_MAP = {
     "create_group": create_group_action,
     "create_expense": create_expense_action,
     "add_expense_to_group": add_expense_to_group_action,
+    "remove_expense_from_group": remove_expense_from_group_action,
     "edit_expense": edit_expense_action,
     "delete_expense": delete_expense_action,
     "acknowledge_share": acknowledge_expense_action,
@@ -868,7 +923,7 @@ if __name__ == "__main__":
             print(f"\n{'='*70}")
             print(f"ERROR DETECTED IN TEST RUN {i+1} (seed={seed})")
             print(f"{'='*70}")
-            break
+            #break
 
         run_time = time.perf_counter() - start
         total_time += run_time
@@ -894,34 +949,34 @@ if __name__ == "__main__":
             log_print(f"Errors found: {errs}")
             log_print(f"To reproduce: run with seed={error_seed}")
             log_print(f"Completed {i}/{MAX_TEST_RUNS} tests before error")
-    else:
-        with open(filename, "w") as f:
 
-            log_print(f"\n{'='*70}")
-            log_print(f"  Average Results over {MAX_TEST_RUNS} test runs with temporal checks: {args.do_temp_check}")
-            log_print(f"{'='*70}")
-            
-            log_print(f"\n Summary:")
-            log_print(f"  Average expenses created: {total_expenses / MAX_TEST_RUNS:.1f}")
-            log_print(f"  Average groups created:   {total_groups / MAX_TEST_RUNS:.1f}")
+    with open(filename, "w") as f:
 
-            avg_time = total_time / MAX_TEST_RUNS
-            log_print(f"\n Timing:")
-            log_print(f"  Total time:   {format_hms(total_time)}")
-            log_print(f"  Average/test: {avg_time:.3f}s")
+        log_print(f"\n{'='*70}")
+        log_print(f"  Average Results over {MAX_TEST_RUNS} test runs with temporal checks: {args.do_temp_check}")
+        log_print(f"{'='*70}")
+        
+        log_print(f"\n Summary:")
+        log_print(f"  Average expenses created: {total_expenses / MAX_TEST_RUNS:.1f}")
+        log_print(f"  Average groups created:   {total_groups / MAX_TEST_RUNS:.1f}")
 
-            log_print(f"\n Action Results (Total across all runs):")
-            log_print(f"  {'Action':<25} {'Passed':>8} {'Failed':>8} {'Total':>8} {'Pass Rate':>10}")
-            log_print(f"  {'-'*25} {'-'*8} {'-'*8} {'-'*8} {'-'*10}")
-            
-            for action_name in sorted(aggregated_actions.keys()):
-                passed = aggregated_actions[action_name]["Passed"]
-                failed = aggregated_actions[action_name]["Failed"]
-                total = passed + failed
-                pass_rate = (passed / total * 100) if total > 0 else 0
-                log_print(f"  {action_name:<25} {passed:>8} {failed:>8} {total:>8} {pass_rate:>9.1f}%")
-            
-            log_print(f"\n{'='*70}")
-            log_print(" All test runs finished.")
-            log_print(f"{'='*70}")
+        avg_time = total_time / MAX_TEST_RUNS
+        log_print(f"\n Timing:")
+        log_print(f"  Total time:   {format_hms(total_time)}")
+        log_print(f"  Average/test: {avg_time:.3f}s")
+
+        log_print(f"\n Action Results (Total across all runs):")
+        log_print(f"  {'Action':<30} {'Passed':>14} {'Failed':>14} {'Total':>14} {'Pass Rate':>14}")
+        log_print(f"  {'-'*30} {'-'*14} {'-'*14} {'-'*14} {'-'*14}")
+        
+        for action_name in sorted(aggregated_actions.keys()):
+            passed = aggregated_actions[action_name]["Passed"]
+            failed = aggregated_actions[action_name]["Failed"]
+            total = passed + failed
+            pass_rate = (passed / total * 100) if total > 0 else 0
+            log_print(f"  {action_name:<30} {passed:>14} {failed:>14} {total:>14} {pass_rate:>13.1f}%")
+        
+        log_print(f"\n{'='*70}")
+        log_print(" All test runs finished.")
+        log_print(f"{'='*70}")
 

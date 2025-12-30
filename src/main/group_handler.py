@@ -96,7 +96,7 @@ class GroupHandler:
     @staticmethod
     def create_group(creator: str, name : str):
         backend = get_backend()
-        gid = str(uuid.uuid4())[:8]
+        gid = str(uuid.uuid4())
         members = {creator: 1}
         invited_members = {creator: 2}
         gifts_received = 0

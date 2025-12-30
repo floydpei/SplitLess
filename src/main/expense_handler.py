@@ -45,7 +45,7 @@ class ExpenseHandler:
     @staticmethod
     def create_expense(payer: str, name: str, shares: Dict[str, float]):
         backend = get_backend()
-        eid = str(uuid.uuid4())[:8]
+        eid = str(uuid.uuid4())
         group = None
         version = 0
         amount = sum(shares.values())
@@ -135,7 +135,7 @@ class ExpenseHandler:
         
         expense["group"] = None
         expense["version"] += 1
-        expense["acknowledged_shares"] = {user : False for user in expense.get("shares") if expense.get("shares")[user] > 0.0}
+        expense["acknowledged_shares"] = {user : False for user in expense.get("shares")}# if expense.get("shares")[user] > 0.0}
         backend.write_expense(actor, expense)
         BalanceHandler.recalculate_gifts(actor, gid, write_to_replica=True)
         return (1, "[ExpenseHandler] Succesfully removed expense " + eid + " from group " + gid)
