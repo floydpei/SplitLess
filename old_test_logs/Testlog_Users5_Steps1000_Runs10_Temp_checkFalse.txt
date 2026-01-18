@@ -1,0 +1,30 @@
+
+======================================================================
+  Average Results over 10 test runs with temporal checks: False
+======================================================================
+
+ Summary:
+  Average expenses created: 75.4
+  Average groups created:   14.1
+
+ Timing:
+  Total time:   00H_00M_02S
+  Average/test: 0.252s
+
+ Action Results (Total across all runs):
+  Action                                 Passed         Failed          Total      Pass Rate
+  ------------------------------ -------------- -------------- -------------- --------------
+  accept                                    763           1192           1955          39.0%
+  acknowledge_share                         953           9218          10171           9.4%
+  add_expense_to_group                     2102           6659           8761          24.0%
+  delete_expense                            770           2972           3742          20.6%
+  edit_expense                              545           3374           3919          13.9%
+  invite                                    841           2522           3363          25.0%
+  leave                                     640           1747           2387          26.8%
+  merge                                   11203              0          11203         100.0%
+  payer_absorbs_left_member                  23           1359           1382           1.7%
+  remove_expense_from_group                 650            597           1247          52.1%
+
+======================================================================
+ All test runs finished.
+======================================================================
