@@ -56,5 +56,3 @@ Enable temporal property checking (slower):
 ```bash
 python3 test_runner.py --do_temp_check
 ```
-
-Test parameters can be configured by modifying the constants at the top of `test_runner.py`.
