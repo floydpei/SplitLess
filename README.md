@@ -47,7 +47,7 @@ After login/signup, use the `help` command within the CLI to see available comma
 ## Probabilistic Testing
 
 Test parameters can be configured by modifying the constants at the top of `test_runner.py`.
-To run the probabilistic tester, navigate to the `src/main` and execute:
+To run the probabilistic tester, navigate to the `src/main` directory and execute:
 ```bash
 python3 test_runner.py
 ```
