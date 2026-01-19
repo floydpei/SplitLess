@@ -29,7 +29,7 @@ The toolbox settings for the largest model we verified are located in:
 ```
 TLA/SplitLess/SplitLess_replica_group_expenses.toolbox/
 ```
-The toolbox contains the constatns defiend in the model and applies the correctness properties during model checking.
+The toolbox contains the constants defiend in the model and applies the correctness properties during model checking.
 
 ## Running the Python Application
 
